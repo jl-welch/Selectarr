@@ -1,134 +1,132 @@
 const Selector = {
-	INPUT: "data-selectarr",
-	LIST: "data-selectarr-list",
-	ITEM: "data-selectarr-item",
-	ITEMACTIVE: "selectarr-active"
+  INPUT: "data-selectarr",
+  LIST: "data-selectarr-list",
+  ITEM: "data-selectarr-item",
+  ITEMACTIVE: "selectarr-active"
 }
 
 class Selectarr {
-	constructor(element = `[${Selector.INPUT}]`, data = []) {
-		this.changeActiveListItem = this.changeActiveListItem.bind(this);
-		this.search								= this.search.bind(this);
-		this.createList 					= this.createList.bind(this);
-		this.keyEnter							= this.keyEnter.bind(this);
-		this.keyArrow							= this.keyArrow.bind(this);
-		this.hoverInputItem				= this.hoverInputItem.bind(this);
+  constructor(element = `[${Selector.INPUT}]`, data = []) {
+    this.changeActiveListItem = this.changeActiveListItem.bind(this);
+    this.search               = this.search.bind(this);
+    this.createList           = this.createList.bind(this);
+    this.keyEnter             = this.keyEnter.bind(this);
+    this.keyArrow             = this.keyArrow.bind(this);
+    this.hoverInputItem       = this.hoverInputItem.bind(this);
 
-		this._element = document.querySelector(element);
-		this._data 		= data;
-		this._index 	= -1;
+    this._element = document.querySelector(element);
+    this._data    = data;
+    this._index   = -1;
 
-		if (this._element) this._element.addEventListener("keyup", this.search);
-	}
+    if (this._element) this._element.addEventListener("keyup", this.search);
+  }
 
-	static changeInputValue(event) {
-		const listItem = event.target.closest(`[${Selector.ITEM}]`);
+  static changeInputValue(event) {
+    const listItem = event.target.closest(`[${Selector.ITEM}]`);
 
-		if (!listItem) {
-			Selectarr.removeList();
-			return null
-		};
+    if (!listItem) {
+      Selectarr.removeList();
+      return null;
+    }
 
-		const inputEl = listItem.parentElement.parentElement.querySelector(`[${Selector.INPUT}]`);
-		if (inputEl) inputEl.value = listItem.textContent;
+    const inputEl = listItem.parentElement.parentElement.querySelector(`[${Selector.INPUT}]`);
+    if (inputEl) inputEl.value = listItem.textContent;
 
-		Selectarr.removeList();
-	}
+    Selectarr.removeList();
+  }
 
-	static removeList() {
-		const list = document.querySelector(`[${Selector.LIST}]`);
-		if (list) list.parentElement.removeChild(list);
-	}
+  static removeList() {
+    const list = document.querySelector(`[${Selector.LIST}]`);
+    if (list) list.parentElement.removeChild(list);
+  }
 
-	createList(data, parent) {
-		const list = document.createElement("ul");
-		let listItem;
+  createList(data, parent) {
+    const list = document.createElement("ul");
+    let listItem;
 
-		list.setAttribute(Selector.LIST, "");
-		
-		data.forEach((str, index) => {
-			listItem = document.createElement("li");
-			listItem.setAttribute(Selector.ITEM, index);
-			listItem.textContent = str;
-			listItem.addEventListener("mouseenter", this.hoverInputItem);
+    list.setAttribute(Selector.LIST, "");
 
-			list.appendChild(listItem);
-		});
+    data.forEach((str, index) => {
+      listItem = document.createElement("li");
+      listItem.setAttribute(Selector.ITEM, index);
+      listItem.textContent = str;
+      listItem.addEventListener("mouseenter", this.hoverInputItem);
 
-		parent.appendChild(list);
-	}
+      list.appendChild(listItem);
+    });
 
-	changeActiveListItem() {
-		const listItems = document.querySelectorAll(`[${Selector.ITEM}]`);
-		if (!listItems.length) return null;
+    parent.appendChild(list);
+  }
 
-		const active = document.querySelector(`.${Selector.ITEMACTIVE}`);
-		if (active) active.className = "";
+  changeActiveListItem() {
+    const listItems = document.querySelectorAll(`[${Selector.ITEM}]`);
+    if (!listItems.length) return null;
 
-		listItems[this._index].className = Selector.ITEMACTIVE; 
-	}
+    const active = document.querySelector(`.${Selector.ITEMACTIVE}`);
+    if (active) active.className = "";
 
-	keyEnter(event) {
-		if (this._index === -1) return null;
+    listItems[this._index].className = Selector.ITEMACTIVE; 
+  }
 
-		const inputEl   = event.target.closest(`[${Selector.INPUT}]`);
-		const listItems = document.querySelectorAll(`[${Selector.ITEM}]`);
-		if (!inputEl || !listItems.length) return null;
+  keyEnter(event) {
+    if (this._index === -1) return null;
 
-		inputEl.value = listItems[this._index].textContent;
-		Selectarr.removeList();
-	}
+    const inputEl   = event.target.closest(`[${Selector.INPUT}]`);
+    const listItems = document.querySelectorAll(`[${Selector.ITEM}]`);
+    if (!inputEl || !listItems.length) return null;
 
-	keyArrow(event) {
-		const listItems = document.querySelectorAll(`[${Selector.ITEM}]`);
-		if (!listItems.length) return null;
+    inputEl.value = listItems[this._index].textContent;
+    Selectarr.removeList();
+  }
 
-		if (event.key === "ArrowUp") {
-			if (this._index === 0 || this._index === -1) return;
+  keyArrow(event) {
+    const listItems = document.querySelectorAll(`[${Selector.ITEM}]`);
+    if (!listItems.length) return null;
 
-			this._index--;
-		} else {
-			if (this._index === listItems.length - 1) return;
+    if (event.key === "ArrowUp") {
+      if (this._index === 0 || this._index === -1) return;
+      this._index--;
+    } else {
+      if (this._index === listItems.length - 1) return;
+      this._index = this._index + 1;
+    }
 
-			this._index = this._index + 1;
-		}
+    this.changeActiveListItem();
+  }
 
-		this.changeActiveListItem();
-	}
+  hoverInputItem(event) {
+    const listItem = event.target.closest(`[${Selector.ITEM}]`);
+    if (!listItem) return null;
 
-	hoverInputItem(event) {
-		const listItem = event.target.closest(`[${Selector.ITEM}]`);
-		if (!listItem) return null;
+    this._index = parseInt(listItem.getAttribute(Selector.ITEM), 10);
 
-		this._index = parseInt(listItem.getAttribute(Selector.ITEM), 10);
+    this.changeActiveListItem();
+  }
 
-		this.changeActiveListItem();
-	}
+  search(event) {
+    if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+      this.keyArrow(event);
+      return;
+    }
 
-	search(event) {
-		if (event.key === "ArrowUp" || event.key === "ArrowDown") {
-			this.keyArrow(event);
-			return;
-		}
+    if (event.key === "Enter") {
+      this.keyEnter(event);
+      return;
+    }
 
-		if (event.key === "Enter") {
-			this.keyEnter(event);
-			return;
-		}
+    this._index = -1;
+    Selectarr.removeList();
 
-		this._index = -1;
-		Selectarr.removeList();
+    const inputEl = event.target.closest(`[${Selector.INPUT}]`);
+    if (!inputEl || !inputEl.value.length) return null;
 
-		const inputEl = event.target.closest(`[${Selector.INPUT}]`);
-		if (!inputEl || !inputEl.value.length) return null;
+    const test  = new RegExp(inputEl.value, 'gi'),
+    match = this._data.filter(name => name.match(test));
 
-		const test  = new RegExp(inputEl.value, 'gi'),
-					match = this._data.filter(name => name.match(test));
-
-		if (match.length) {
-			this.createList(match, inputEl.parentElement);
-		}
-	}
+    if (match.length) {
+      this.createList(match, inputEl.parentElement);
+    }
+  }
 }
 
 document.addEventListener("click", Selectarr.changeInputValue);
