@@ -1,0 +1,28 @@
+[data-selectarr-list] {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border-right: 1px solid grey;
+  border-left: 1px solid grey;
+  list-style: none;
+  background-color: white;
+  z-index: 10;
+}
+
+[data-selectarr-item] {
+  margin: 0;
+  padding: 0.6rem 1.2rem;
+  border-bottom: 1px solid grey;
+  list-style: none;
+  cursor: pointer;
+  transition: background-color .15s ease;
+}
+
+[data-selectarr-item].selectarr-active {
+  background-color: grey;
+}
+
+/*# sourceMappingURL=style.css.map */

@@ -1,0 +1,26 @@
+[data-selectarr-list] {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border-right: $selectarr-border solid $selectarr-border-color;
+  border-left: $selectarr-border solid $selectarr-border-color;
+  list-style: none;
+  background-color: $selectarr-bg;
+  z-index: $selectarr-zindex;
+}
+
+[data-selectarr-item] {
+  margin: 0;
+  padding: $selectarr-item-spacing-y $selectarr-item-spacing-x;
+  border-bottom: $selectarr-border solid $selectarr-border-color;
+  list-style: none;
+  cursor: pointer;
+  transition: background-color .15s ease;
+
+  &.selectarr-active {
+    background-color: $selectarr-border-color;
+  }
+}
