@@ -31,52 +31,31 @@
     LIST: "data-selectarr-list",
     ITEM: "data-selectarr-item",
     ITEMACTIVE: "selectarr-active"
-    /** 
-     * Class representing a searchable select
-     */
-
   };
 
   var Selectarr =
   /*#__PURE__*/
   function () {
-    /**
-     * 
-     * @param {string} element - Selector for element(s)
-     * @param {string[]} data - Dropdown of options
-     */
     function Selectarr() {
-      var element = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-      var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+      var element = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "[".concat(Selector.INPUT, "]");
+      var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
 
       _classCallCheck(this, Selectarr);
 
-      this.keyup = this.keyup.bind(this);
+      this.changeActiveListItem = this.changeActiveListItem.bind(this);
+      this.search = this.search.bind(this);
       this.createList = this.createList.bind(this);
       this.keyEnter = this.keyEnter.bind(this);
       this.keyArrow = this.keyArrow.bind(this);
-      this.mouseEnter = this.mouseEnter.bind(this);
+      this.hoverInputItem = this.hoverInputItem.bind(this);
       this._element = document.querySelector(element);
       this._data = data;
       this._index = -1;
-      if (this._element) this._element.addEventListener("keyup", this.keyup);
+      if (this._element) this._element.addEventListener("keyup", this.search);
     }
-    /**
-     * Change the value of an input
-     * 
-     * @param {object} event - Event object passed from event listener
-     */
-
 
     _createClass(Selectarr, [{
       key: "createList",
-
-      /**
-       * Create HTML for list of items
-       * 
-       * @param {string[]} data - Filtered data matching input value
-       * @param {HTMLElement} parent - Parent element to append list
-       */
       value: function createList(data, parent) {
         var _this = this;
 
@@ -87,17 +66,20 @@
           listItem = document.createElement("li");
           listItem.setAttribute(Selector.ITEM, index);
           listItem.textContent = str;
-          listItem.addEventListener("mouseenter", _this.mouseEnter);
+          listItem.addEventListener("mouseenter", _this.hoverInputItem);
           list.appendChild(listItem);
         });
         parent.appendChild(list);
       }
-      /**
-       * Handle enter keyup event
-       * 
-       * @param {object} event - Event object passed from event listener
-       */
-
+    }, {
+      key: "changeActiveListItem",
+      value: function changeActiveListItem() {
+        var listItems = document.querySelectorAll("[".concat(Selector.ITEM, "]"));
+        if (!listItems.length) return null;
+        var active = document.querySelector(".".concat(Selector.ITEMACTIVE));
+        if (active) active.className = "";
+        listItems[this._index].className = Selector.ITEMACTIVE;
+      }
     }, {
       key: "keyEnter",
       value: function keyEnter(event) {
@@ -108,12 +90,6 @@
         inputEl.value = listItems[this._index].textContent;
         Selectarr.removeList();
       }
-      /**
-       * Handle arrow up and down keyup event
-       * 
-       * @param {object} event - Event object passed from event listener
-       */
-
     }, {
       key: "keyArrow",
       value: function keyArrow(event) {
@@ -128,31 +104,19 @@
           this._index = this._index + 1;
         }
 
-        Selectarr.changeActive(this._index);
+        this.changeActiveListItem();
       }
-      /**
-       * Handle mouse over event on list items
-       * 
-       * @param {object} event - Event object passed from event listener
-       */
-
     }, {
-      key: "mouseEnter",
-      value: function mouseEnter(event) {
+      key: "hoverInputItem",
+      value: function hoverInputItem(event) {
         var listItem = event.target.closest("[".concat(Selector.ITEM, "]"));
         if (!listItem) return null;
         this._index = parseInt(listItem.getAttribute(Selector.ITEM), 10);
-        Selectarr.changeActive(this._index);
+        this.changeActiveListItem();
       }
-      /**
-       * Handle keyup event on input
-       * 
-       * @param {object} event - Event object passed from event listener 
-       */
-
     }, {
-      key: "keyup",
-      value: function keyup(event) {
+      key: "search",
+      value: function search(event) {
         if (event.key === "ArrowUp" || event.key === "ArrowDown") {
           this.keyArrow(event);
           return;
@@ -178,8 +142,8 @@
         }
       }
     }], [{
-      key: "applyValue",
-      value: function applyValue(event) {
+      key: "changeInputValue",
+      value: function changeInputValue(event) {
         var listItem = event.target.closest("[".concat(Selector.ITEM, "]"));
 
         if (!listItem) {
@@ -190,25 +154,6 @@
         if (inputEl) inputEl.value = listItem.textContent;
         Selectarr.removeList();
       }
-      /**
-       * Change current active class on list item
-       * 
-       * @param {number} index - Index of list item
-       */
-
-    }, {
-      key: "changeActive",
-      value: function changeActive(index) {
-        var listItems = document.querySelectorAll("[".concat(Selector.ITEM, "]"));
-        if (!listItems.length) return null;
-        var active = document.querySelector(".".concat(Selector.ITEMACTIVE));
-        if (active) active.className = "";
-        listItems[index].className = Selector.ITEMACTIVE;
-      }
-      /**
-       * Remove list HTML and reset value of index
-       */
-
     }, {
       key: "removeList",
       value: function removeList() {
@@ -220,7 +165,9 @@
     return Selectarr;
   }();
 
-  document.addEventListener("click", Selectarr.applyValue);
+  document.addEventListener("click", Selectarr.changeInputValue);
+  var inst = new Selectarr(".test", ["one", "two", "three", "hello", "goodbye", "james", "jurate"]);
+  new Selectarr(".testt", ["one", "two", "three", "hello", "goodbye", "james", "jurate"]);
 
   return Selectarr;
 

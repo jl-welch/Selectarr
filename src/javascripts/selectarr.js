@@ -5,35 +5,23 @@ const Selector = {
 	ITEMACTIVE: "selectarr-active"
 }
 
-/** 
- * Class representing a searchable select
- */
 class Selectarr {
-	/**
-	 * 
-	 * @param {string} element - Selector for element(s)
-	 * @param {string[]} data - Dropdown of options
-	 */
-	constructor(element = null, data = null) {
-		this.keyup				= this.keyup.bind(this);
-		this.createList 	= this.createList.bind(this);
-		this.keyEnter			= this.keyEnter.bind(this);
-		this.keyArrow			= this.keyArrow.bind(this);
-		this.mouseEnter		= this.mouseEnter.bind(this);
+	constructor(element = `[${Selector.INPUT}]`, data = []) {
+		this.changeActiveListItem = this.changeActiveListItem.bind(this);
+		this.search								= this.search.bind(this);
+		this.createList 					= this.createList.bind(this);
+		this.keyEnter							= this.keyEnter.bind(this);
+		this.keyArrow							= this.keyArrow.bind(this);
+		this.hoverInputItem				= this.hoverInputItem.bind(this);
 
 		this._element = document.querySelector(element);
 		this._data 		= data;
 		this._index 	= -1;
 
-		if (this._element) this._element.addEventListener("keyup", this.keyup);
+		if (this._element) this._element.addEventListener("keyup", this.search);
 	}
 
-	/**
-	 * Change the value of an input
-	 * 
-	 * @param {object} event - Event object passed from event listener
-	 */
-	static applyValue(event) {
+	static changeInputValue(event) {
 		const listItem = event.target.closest(`[${Selector.ITEM}]`);
 
 		if (!listItem) {
@@ -47,35 +35,11 @@ class Selectarr {
 		Selectarr.removeList();
 	}
 
-	/**
-	 * Change current active class on list item
-	 * 
-	 * @param {number} index - Index of list item
-	 */
-	static changeActive(index) {
-		const listItems = document.querySelectorAll(`[${Selector.ITEM}]`);
-		if (!listItems.length) return null;
-
-		const active = document.querySelector(`.${Selector.ITEMACTIVE}`);
-		if (active) active.className = "";
-
-		listItems[index].className = Selector.ITEMACTIVE; 
-	}
-
-	/**
-	 * Remove list HTML and reset value of index
-	 */
 	static removeList() {
 		const list = document.querySelector(`[${Selector.LIST}]`);
 		if (list) list.parentElement.removeChild(list);
 	}
 
-	/**
-	 * Create HTML for list of items
-	 * 
-	 * @param {string[]} data - Filtered data matching input value
-	 * @param {HTMLElement} parent - Parent element to append list
-	 */
 	createList(data, parent) {
 		const list = document.createElement("ul");
 		let listItem;
@@ -86,7 +50,7 @@ class Selectarr {
 			listItem = document.createElement("li");
 			listItem.setAttribute(Selector.ITEM, index);
 			listItem.textContent = str;
-			listItem.addEventListener("mouseenter", this.mouseEnter);
+			listItem.addEventListener("mouseenter", this.hoverInputItem);
 
 			list.appendChild(listItem);
 		});
@@ -94,11 +58,16 @@ class Selectarr {
 		parent.appendChild(list);
 	}
 
-	/**
-	 * Handle enter keyup event
-	 * 
-	 * @param {object} event - Event object passed from event listener
-	 */
+	changeActiveListItem() {
+		const listItems = document.querySelectorAll(`[${Selector.ITEM}]`);
+		if (!listItems.length) return null;
+
+		const active = document.querySelector(`.${Selector.ITEMACTIVE}`);
+		if (active) active.className = "";
+
+		listItems[this._index].className = Selector.ITEMACTIVE; 
+	}
+
 	keyEnter(event) {
 		if (this._index === -1) return null;
 
@@ -110,11 +79,6 @@ class Selectarr {
 		Selectarr.removeList();
 	}
 
-	/**
-	 * Handle arrow up and down keyup event
-	 * 
-	 * @param {object} event - Event object passed from event listener
-	 */
 	keyArrow(event) {
 		const listItems = document.querySelectorAll(`[${Selector.ITEM}]`);
 		if (!listItems.length) return null;
@@ -129,29 +93,19 @@ class Selectarr {
 			this._index = this._index + 1;
 		}
 
-		Selectarr.changeActive(this._index);
+		this.changeActiveListItem();
 	}
 
-	/**
-	 * Handle mouse over event on list items
-	 * 
-	 * @param {object} event - Event object passed from event listener
-	 */
-	mouseEnter(event) {
+	hoverInputItem(event) {
 		const listItem = event.target.closest(`[${Selector.ITEM}]`);
 		if (!listItem) return null;
 
 		this._index = parseInt(listItem.getAttribute(Selector.ITEM), 10);
 
-		Selectarr.changeActive(this._index);
+		this.changeActiveListItem();
 	}
 
-	/**
-	 * Handle keyup event on input
-	 * 
-	 * @param {object} event - Event object passed from event listener 
-	 */
-	keyup(event) {
+	search(event) {
 		if (event.key === "ArrowUp" || event.key === "ArrowDown") {
 			this.keyArrow(event);
 			return;
@@ -177,6 +131,6 @@ class Selectarr {
 	}
 }
 
-document.addEventListener("click", Selectarr.applyValue);
+document.addEventListener("click", Selectarr.changeInputValue);
 
 export default Selectarr;
