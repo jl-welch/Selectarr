@@ -27,9 +27,11 @@
   }
 
   var Selector = {
+    CLASS: "selectarr",
     INPUT: "data-selectarr",
     LIST: "data-selectarr-list",
     ITEM: "data-selectarr-item",
+    VALUE: "data-selectarr-value",
     ITEMACTIVE: "selectarr-active"
   };
 
@@ -38,42 +40,97 @@
   function () {
     function Selectarr() {
       var element = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "[".concat(Selector.INPUT, "]");
-      var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+      var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [{}];
 
       _classCallCheck(this, Selectarr);
 
-      this.changeActiveListItem = this.changeActiveListItem.bind(this);
+      this.init = this.init.bind(this);
       this.search = this.search.bind(this);
       this.createList = this.createList.bind(this);
+      this.changeActive = this.changeActive.bind(this);
+      this.key = this.key.bind(this);
       this.keyEnter = this.keyEnter.bind(this);
-      this.keyArrow = this.keyArrow.bind(this);
-      this.hoverInputItem = this.hoverInputItem.bind(this);
+      this.keyArrowUp = this.keyArrowUp.bind(this);
+      this.keyArrowDown = this.keyArrowDown.bind(this);
+      this.mouseEnter = this.mouseEnter.bind(this);
       this._element = document.querySelector(element);
       this._data = data;
       this._index = -1;
-      if (this._element) this._element.addEventListener("keyup", this.search);
+
+      if (this._element) {
+        this.init();
+      }
     }
 
     _createClass(Selectarr, [{
+      key: "init",
+      value: function init() {
+        var clone = this._element.cloneNode(),
+            valueInput = clone.cloneNode(),
+            wrapper = this._element.parentElement;
+
+        clone.removeAttribute("name");
+        clone.addEventListener("keyup", this.search);
+        valueInput.className = Selector.CLASS;
+        valueInput.type = "hidden";
+        valueInput.removeAttribute(Selector.INPUT);
+        this._parent = document.createElement("div");
+        this._parent.style.display = "inline-block";
+        this._parent.style.position = "relative";
+
+        this._parent.appendChild(clone);
+
+        this._parent.appendChild(valueInput);
+
+        wrapper.replaceChild(this._parent, this._element);
+        this._element = clone;
+      }
+    }, {
+      key: "search",
+      value: function search(event) {
+        var eventKey = event.key,
+            usefulKey = eventKey === "ArrowUp" || eventKey === "ArrowDown" || eventKey === "Enter";
+
+        if (usefulKey) {
+          this.key(event, event.key);
+          return;
+        }
+
+        Selectarr.remove();
+        this._index = -1;
+        if (!this._element.value.length) return null;
+
+        var test = new RegExp(this._element.value, 'gi'),
+            match = this._data.filter(function (name) {
+          return name.text.match(test);
+        });
+
+        if (match.length) {
+          this.createList(match);
+        }
+      }
+    }, {
       key: "createList",
-      value: function createList(data, parent) {
+      value: function createList(data) {
         var _this = this;
 
         var list = document.createElement("ul");
         var listItem;
         list.setAttribute(Selector.LIST, "");
-        data.forEach(function (str, index) {
+        data.forEach(function (obj, index) {
           listItem = document.createElement("li");
+          listItem.setAttribute(Selector.VALUE, obj.value);
           listItem.setAttribute(Selector.ITEM, index);
-          listItem.textContent = str;
-          listItem.addEventListener("mouseenter", _this.hoverInputItem);
+          listItem.textContent = obj.text;
+          listItem.addEventListener("mouseenter", _this.hover);
           list.appendChild(listItem);
         });
-        parent.appendChild(list);
+
+        this._parent.appendChild(list);
       }
     }, {
-      key: "changeActiveListItem",
-      value: function changeActiveListItem() {
+      key: "changeActive",
+      value: function changeActive() {
         var listItems = document.querySelectorAll("[".concat(Selector.ITEM, "]"));
         if (!listItems.length) return null;
         var active = document.querySelector(".".concat(Selector.ITEMACTIVE));
@@ -81,82 +138,65 @@
         listItems[this._index].className = Selector.ITEMACTIVE;
       }
     }, {
+      key: "key",
+      value: function key(event, _key) {
+        var listItems = document.querySelectorAll("[".concat(Selector.ITEM, "]"));
+        if (!listItems.length) return null;
+        this["key".concat(_key)](event, listItems);
+      }
+    }, {
       key: "keyEnter",
       value: function keyEnter(event) {
         if (this._index === -1) return null;
-        var inputEl = event.target.closest("[".concat(Selector.INPUT, "]"));
-        var listItems = document.querySelectorAll("[".concat(Selector.ITEM, "]"));
-        if (!inputEl || !listItems.length) return null;
-        inputEl.value = listItems[this._index].textContent;
-        Selectarr.removeList();
+        Selectarr.applyValue(event, this._index);
+        this._index = -1;
       }
     }, {
-      key: "keyArrow",
-      value: function keyArrow(event) {
-        var listItems = document.querySelectorAll("[".concat(Selector.ITEM, "]"));
-        if (!listItems.length) return null;
-
-        if (event.key === "ArrowUp") {
-          if (this._index === 0 || this._index === -1) return;
-          this._index--;
-        } else {
-          if (this._index === listItems.length - 1) return;
-          this._index = this._index + 1;
-        }
-
-        this.changeActiveListItem();
+      key: "keyArrowUp",
+      value: function keyArrowUp() {
+        if (this._index === 0 || this._index === -1) return null;
+        this._index--;
+        this.changeActive();
       }
     }, {
-      key: "hoverInputItem",
-      value: function hoverInputItem(event) {
+      key: "keyArrowDown",
+      value: function keyArrowDown(event, listItems) {
+        if (this._index === listItems.length - 1) return null;
+        this._index++;
+        this.changeActive();
+      }
+    }, {
+      key: "mouseEnter",
+      value: function mouseEnter(event) {
         var listItem = event.target.closest("[".concat(Selector.ITEM, "]"));
         if (!listItem) return null;
         this._index = parseInt(listItem.getAttribute(Selector.ITEM), 10);
-        this.changeActiveListItem();
-      }
-    }, {
-      key: "search",
-      value: function search(event) {
-        if (event.key === "ArrowUp" || event.key === "ArrowDown") {
-          this.keyArrow(event);
-          return;
-        }
-
-        if (event.key === "Enter") {
-          this.keyEnter(event);
-          return;
-        }
-
-        this._index = -1;
-        Selectarr.removeList();
-        var inputEl = event.target.closest("[".concat(Selector.INPUT, "]"));
-        if (!inputEl || !inputEl.value.length) return null;
-
-        var test = new RegExp(inputEl.value, 'gi'),
-            match = this._data.filter(function (name) {
-          return name.match(test);
-        });
-
-        if (match.length) {
-          this.createList(match, inputEl.parentElement);
-        }
+        this.changeActive();
       }
     }], [{
-      key: "changeInputValue",
-      value: function changeInputValue(event) {
-        var listItem = event.target.closest("[".concat(Selector.ITEM, "]"));
+      key: "applyValue",
+      value: function applyValue(event) {
+        var index = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+        var list, listItem, input, valueInput;
+        list = "key" in event ? event.target.parentElement.querySelector("[".concat(Selector.LIST, "]")) : event.target.closest("[".concat(Selector.LIST, "]"));
+        if (list) listItem = event.target.closest("[".concat(Selector.ITEM, "]")) || list.querySelector("[".concat(Selector.ITEM, "=\"").concat(index, "\"]"));
 
-        if (!listItem) {
-          Selectarr.removeList();
-          return null;
+        if (listItem) {
+          var parent = list.parentElement;
+          input = parent.querySelector("[".concat(Selector.INPUT, "]"));
+          valueInput = parent.querySelector(".".concat(Selector.CLASS));
+
+          if (input && valueInput) {
+            input.value = listItem.textContent;
+            valueInput.value = listItem.getAttribute(Selector.VALUE);
+          }
         }
-        var inputEl = listItem.parentElement.parentElement.querySelector("[".concat(Selector.INPUT, "]"));
-        if (inputEl) inputEl.value = listItem.textContent;
-        Selectarr.removeList();
+
+        Selectarr.remove();
       }
     }, {
-      key: "removeList",
-      value: function removeList() {
+      key: "remove",
+      value: function remove() {
         var list = document.querySelector("[".concat(Selector.LIST, "]"));
         if (list) list.parentElement.removeChild(list);
       }
@@ -165,9 +205,27 @@
     return Selectarr;
   }();
 
-  document.addEventListener("click", Selectarr.changeInputValue);
-  var inst = new Selectarr(".test", ["one", "two", "three", "hello", "goodbye", "james", "jurate"]);
-  new Selectarr(".testt", ["one", "two", "three", "hello", "goodbye", "james", "jurate"]);
+  document.addEventListener("click", Selectarr.applyValue);
+  new Selectarr(".test", [{
+    text: "one",
+    value: 0
+  }, {
+    text: "two",
+    value: 1
+  }, {
+    text: "three",
+    value: 2
+  }]);
+  new Selectarr(".testt", [{
+    text: "one",
+    value: 0
+  }, {
+    text: "two",
+    value: 1
+  }, {
+    text: "three",
+    value: 2
+  }]);
 
   return Selectarr;
 

@@ -10,3 +10,4 @@ Thumbs.db
 # Project #
 node_modules/
 .vscode/
+index.html

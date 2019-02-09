@@ -1,64 +1,130 @@
 const Selector = {
+  CLASS: "selectarr",
   INPUT: "data-selectarr",
   LIST: "data-selectarr-list",
   ITEM: "data-selectarr-item",
+  VALUE: "data-selectarr-value",
   ITEMACTIVE: "selectarr-active"
 }
 
 class Selectarr {
-  constructor(element = `[${Selector.INPUT}]`, data = []) {
-    this.changeActiveListItem = this.changeActiveListItem.bind(this);
-    this.search               = this.search.bind(this);
-    this.createList           = this.createList.bind(this);
-    this.keyEnter             = this.keyEnter.bind(this);
-    this.keyArrow             = this.keyArrow.bind(this);
-    this.hoverInputItem       = this.hoverInputItem.bind(this);
+  constructor(element = `[${Selector.INPUT}]`, data = [{}]) {
+    this.init              = this.init.bind(this);
+    this.search            = this.search.bind(this);
+    this.createList        = this.createList.bind(this);
+    this.changeActive      = this.changeActive.bind(this);
+    this.key               = this.key.bind(this);
+    this.keyEnter          = this.keyEnter.bind(this);
+    this.keyArrowUp        = this.keyArrowUp.bind(this);
+    this.keyArrowDown      = this.keyArrowDown.bind(this);
+    this.mouseEnter        = this.mouseEnter.bind(this);
 
     this._element = document.querySelector(element);
     this._data    = data;
     this._index   = -1;
 
-    if (this._element) this._element.addEventListener("keyup", this.search);
+    if (this._element) {
+      this.init();
+    }
   }
 
-  static changeInputValue(event) {
-    const listItem = event.target.closest(`[${Selector.ITEM}]`);
+  static applyValue(event, index = null) {
+    let list, listItem, input, valueInput;
 
-    if (!listItem) {
-      Selectarr.removeList();
-      return null;
+    list = "key" in event ? 
+      event.target.parentElement.querySelector(`[${Selector.LIST}]`) :
+      event.target.closest(`[${Selector.LIST}]`);
+
+    if (list) listItem = event.target.closest(`[${Selector.ITEM}]`) ||
+                         list.querySelector(`[${Selector.ITEM}="${index}"]`);
+    if (listItem) {
+      let parent = list.parentElement;
+
+      input      = parent.querySelector(`[${Selector.INPUT}]`);
+      valueInput = parent.querySelector(`.${Selector.CLASS}`);
+
+      if (input && valueInput) {
+        input.value      = listItem.textContent;
+        valueInput.value = listItem.getAttribute(Selector.VALUE);
+      }
     }
 
-    const inputEl = listItem.parentElement.parentElement.querySelector(`[${Selector.INPUT}]`);
-    if (inputEl) inputEl.value = listItem.textContent;
-
-    Selectarr.removeList();
+    Selectarr.remove();
   }
 
-  static removeList() {
+  static remove() {
     const list = document.querySelector(`[${Selector.LIST}]`);
     if (list) list.parentElement.removeChild(list);
   }
 
-  createList(data, parent) {
+  init() {
+    const clone      = this._element.cloneNode(),
+          valueInput = clone.cloneNode(),
+          wrapper    = this._element.parentElement;
+
+    clone.removeAttribute("name");
+    clone.addEventListener("keyup", this.search);
+
+    valueInput.className = Selector.CLASS;
+    valueInput.type = "hidden";
+    valueInput.removeAttribute(Selector.INPUT);
+    
+    this._parent = document.createElement("div");
+    this._parent.style.display = "inline-block";
+    this._parent.style.position = "relative";
+    
+    this._parent.appendChild(clone);
+    this._parent.appendChild(valueInput);
+
+    wrapper.replaceChild(this._parent, this._element);
+
+    this._element = clone;
+  }
+
+  search(event) {
+    const eventKey  = event.key,
+          usefulKey = eventKey === "ArrowUp"   || 
+                      eventKey === "ArrowDown" || 
+                      eventKey === "Enter";
+
+    if (usefulKey) {
+      this.key(event, event.key);
+      return;
+    }
+
+    Selectarr.remove();
+    this._index = -1;
+
+    if (!this._element.value.length) return null;
+
+    const test  = new RegExp(this._element.value, 'gi'),
+          match = this._data.filter(name => name.text.match(test));
+
+    if (match.length) {
+      this.createList(match);
+    }
+  }
+
+  createList(data) {
     const list = document.createElement("ul");
     let listItem;
 
     list.setAttribute(Selector.LIST, "");
 
-    data.forEach((str, index) => {
+    data.forEach((obj, index) => {
       listItem = document.createElement("li");
+      listItem.setAttribute(Selector.VALUE, obj.value);
       listItem.setAttribute(Selector.ITEM, index);
-      listItem.textContent = str;
-      listItem.addEventListener("mouseenter", this.hoverInputItem);
+      listItem.textContent = obj.text;
+      listItem.addEventListener("mouseenter", this.hover);
 
       list.appendChild(listItem);
     });
 
-    parent.appendChild(list);
+    this._parent.appendChild(list);
   }
 
-  changeActiveListItem() {
+  changeActive() {
     const listItems = document.querySelectorAll(`[${Selector.ITEM}]`);
     if (!listItems.length) return null;
 
@@ -68,67 +134,43 @@ class Selectarr {
     listItems[this._index].className = Selector.ITEMACTIVE; 
   }
 
-  keyEnter(event) {
-    if (this._index === -1) return null;
-
-    const inputEl   = event.target.closest(`[${Selector.INPUT}]`);
-    const listItems = document.querySelectorAll(`[${Selector.ITEM}]`);
-    if (!inputEl || !listItems.length) return null;
-
-    inputEl.value = listItems[this._index].textContent;
-    Selectarr.removeList();
-  }
-
-  keyArrow(event) {
+  key(event, key) {
     const listItems = document.querySelectorAll(`[${Selector.ITEM}]`);
     if (!listItems.length) return null;
 
-    if (event.key === "ArrowUp") {
-      if (this._index === 0 || this._index === -1) return;
-      this._index--;
-    } else {
-      if (this._index === listItems.length - 1) return;
-      this._index = this._index + 1;
-    }
-
-    this.changeActiveListItem();
+    this[`key${key}`](event, listItems);
   }
 
-  hoverInputItem(event) {
+  keyEnter(event) {
+    if (this._index === -1) return null;
+    Selectarr.applyValue(event, this._index);
+    this._index = -1;
+  }
+
+  keyArrowUp() {
+    if (this._index === 0 || this._index === -1) return null;
+    this._index--;
+
+    this.changeActive();
+  } 
+
+  keyArrowDown(event, listItems) {
+    if (this._index === listItems.length - 1) return null;
+    this._index++;
+
+    this.changeActive();
+  }
+
+  mouseEnter(event) {
     const listItem = event.target.closest(`[${Selector.ITEM}]`);
     if (!listItem) return null;
 
     this._index = parseInt(listItem.getAttribute(Selector.ITEM), 10);
 
-    this.changeActiveListItem();
-  }
-
-  search(event) {
-    if (event.key === "ArrowUp" || event.key === "ArrowDown") {
-      this.keyArrow(event);
-      return;
-    }
-
-    if (event.key === "Enter") {
-      this.keyEnter(event);
-      return;
-    }
-
-    this._index = -1;
-    Selectarr.removeList();
-
-    const inputEl = event.target.closest(`[${Selector.INPUT}]`);
-    if (!inputEl || !inputEl.value.length) return null;
-
-    const test  = new RegExp(inputEl.value, 'gi'),
-    match = this._data.filter(name => name.match(test));
-
-    if (match.length) {
-      this.createList(match, inputEl.parentElement);
-    }
+    this.changeActive();
   }
 }
 
-document.addEventListener("click", Selectarr.changeInputValue);
+document.addEventListener("click", Selectarr.applyValue);
 
 export default Selectarr;
