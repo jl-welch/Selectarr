@@ -1,4 +1,8 @@
-[data-selectarr-list] {
+.selectarr {
+  position: relative;
+  display: inline-block;
+}
+.selectarr-list {
   position: absolute;
   top: 100%;
   left: 0;
@@ -13,7 +17,7 @@
   box-sizing: border-box;
 }
 
-[data-selectarr-item] {
+.selectarr-item {
   margin: 0;
   padding: $selectarr-item-spacing-y $selectarr-item-spacing-x;
   border-bottom: $selectarr-border solid $selectarr-border-color;

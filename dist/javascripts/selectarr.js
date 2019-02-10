@@ -26,21 +26,25 @@
     return Constructor;
   }
 
-  var Selector = {
-    CLASS: "selectarr",
+  var Data = {
     INPUT: "data-selectarr",
     LIST: "data-selectarr-list",
     ITEM: "data-selectarr-item",
-    VALUE: "data-selectarr-value",
-    ITEMACTIVE: "selectarr-active"
+    VALUE: "data-selectarr-value"
+  };
+  var Class = {
+    INPUT: "-input",
+    LIST: "-list",
+    ITEM: "-item",
+    ITEMACTIVE: "-active"
   };
 
   var Selectarr =
   /*#__PURE__*/
   function () {
     function Selectarr() {
-      var element = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "[".concat(Selector.INPUT, "]");
-      var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [{}];
+      var element = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "[".concat(Data.INPUT, "]");
+      var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
       _classCallCheck(this, Selectarr);
 
@@ -54,10 +58,11 @@
       this.keyArrowDown = this.keyArrowDown.bind(this);
       this.mouseEnter = this.mouseEnter.bind(this);
       this._element = document.querySelector(element);
+      this._class = "class" in data ? data.class : "selectarr";
       this._data = data;
       this._index = -1;
 
-      if (this._element) {
+      if (this._element && "values" in data) {
         this.init();
       }
     }
@@ -65,33 +70,32 @@
     _createClass(Selectarr, [{
       key: "init",
       value: function init() {
-        var clone = this._element.cloneNode(),
-            valueInput = clone.cloneNode(),
-            wrapper = this._element.parentElement;
+        var input = this._element.cloneNode(),
+            parent = this._element.parentElement;
 
-        clone.removeAttribute("name");
-        clone.addEventListener("keyup", this.search);
-        valueInput.className = Selector.CLASS;
-        valueInput.type = "hidden";
-        valueInput.removeAttribute(Selector.INPUT);
+        this._element.removeAttribute("name");
+
+        this._element.addEventListener("keyup", this.search);
+
+        input.className = "".concat(this._class).concat(Class.INPUT);
+        input.type = "hidden";
+        input.removeAttribute("id");
+        input.removeAttribute(Data.INPUT);
         this._parent = document.createElement("div");
-        this._parent.style.display = "inline-block";
-        this._parent.style.position = "relative";
+        this._parent.className = this._class;
+        parent.replaceChild(this._parent, this._element);
 
-        this._parent.appendChild(clone);
+        this._parent.appendChild(this._element);
 
-        this._parent.appendChild(valueInput);
-
-        wrapper.replaceChild(this._parent, this._element);
-        this._element = clone;
+        this._parent.appendChild(input);
       }
     }, {
       key: "search",
       value: function search(event) {
         var eventKey = event.key,
-            usefulKey = eventKey === "ArrowUp" || eventKey === "ArrowDown" || eventKey === "Enter";
+            key = eventKey === "ArrowUp" || eventKey === "ArrowDown" || eventKey === "Enter";
 
-        if (usefulKey) {
+        if (key) {
           this.key(event, event.key);
           return;
         }
@@ -101,8 +105,8 @@
         if (!this._element.value.length) return null;
 
         var test = new RegExp(this._element.value, 'gi'),
-            match = this._data.filter(function (name) {
-          return name.text.match(test);
+            match = this._data.values.filter(function (data) {
+          return data.hasOwnProperty("text") && data.text.match(test);
         });
 
         if (match.length) {
@@ -116,13 +120,15 @@
 
         var list = document.createElement("ul");
         var listItem;
-        list.setAttribute(Selector.LIST, "");
+        list.className = "".concat(this._class).concat(Class.LIST);
+        list.setAttribute(Data.LIST, "");
         data.forEach(function (obj, index) {
           listItem = document.createElement("li");
-          listItem.setAttribute(Selector.VALUE, obj.value);
-          listItem.setAttribute(Selector.ITEM, index);
           listItem.textContent = obj.text;
-          listItem.addEventListener("mouseenter", _this.hover);
+          listItem.className = "".concat(_this._class).concat(Class.ITEM);
+          listItem.setAttribute(Data.VALUE, obj.value || obj.text);
+          listItem.setAttribute(Data.ITEM, index);
+          listItem.addEventListener("mouseenter", _this.mouseEnter);
           list.appendChild(listItem);
         });
 
@@ -131,16 +137,17 @@
     }, {
       key: "changeActive",
       value: function changeActive() {
-        var listItems = document.querySelectorAll("[".concat(Selector.ITEM, "]"));
+        var listItems = document.querySelectorAll("[".concat(Data.ITEM, "]"));
         if (!listItems.length) return null;
-        var active = document.querySelector(".".concat(Selector.ITEMACTIVE));
-        if (active) active.className = "";
-        listItems[this._index].className = Selector.ITEMACTIVE;
+        var active = document.querySelector(".".concat(this._class).concat(Class.ITEMACTIVE));
+        if (active) active.classList.remove(this._class + Class.ITEMACTIVE);
+
+        listItems[this._index].classList.add(this._class + Class.ITEMACTIVE);
       }
     }, {
       key: "key",
       value: function key(event, _key) {
-        var listItems = document.querySelectorAll("[".concat(Selector.ITEM, "]"));
+        var listItems = document.querySelectorAll("[".concat(Data.ITEM, "]"));
         if (!listItems.length) return null;
         this["key".concat(_key)](event, listItems);
       }
@@ -168,9 +175,9 @@
     }, {
       key: "mouseEnter",
       value: function mouseEnter(event) {
-        var listItem = event.target.closest("[".concat(Selector.ITEM, "]"));
+        var listItem = event.target.closest("[".concat(Data.ITEM, "]"));
         if (!listItem) return null;
-        this._index = parseInt(listItem.getAttribute(Selector.ITEM), 10);
+        this._index = parseInt(listItem.getAttribute(Data.ITEM), 10);
         this.changeActive();
       }
     }], [{
@@ -178,17 +185,18 @@
       value: function applyValue(event) {
         var index = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
         var list, listItem, input, valueInput;
-        list = "key" in event ? event.target.parentElement.querySelector("[".concat(Selector.LIST, "]")) : event.target.closest("[".concat(Selector.LIST, "]"));
-        if (list) listItem = event.target.closest("[".concat(Selector.ITEM, "]")) || list.querySelector("[".concat(Selector.ITEM, "=\"").concat(index, "\"]"));
+        list = "key" in event ? event.target.parentElement.querySelector("[".concat(Data.LIST, "]")) : event.target.closest("[".concat(Data.LIST, "]"));
+        if (list) listItem = event.target.closest("[".concat(Data.ITEM, "]")) || list.querySelector("[".concat(Data.ITEM, "=\"").concat(index, "\"]"));
 
         if (listItem) {
-          var parent = list.parentElement;
-          input = parent.querySelector("[".concat(Selector.INPUT, "]"));
-          valueInput = parent.querySelector(".".concat(Selector.CLASS));
+          var parent = list.parentElement,
+              parentClass = parent.className;
+          input = parent.querySelector("[".concat(Data.INPUT, "]"));
+          valueInput = parent.querySelector(".".concat(parentClass).concat(Class.INPUT));
 
           if (input && valueInput) {
             input.value = listItem.textContent;
-            valueInput.value = listItem.getAttribute(Selector.VALUE);
+            valueInput.value = listItem.getAttribute(Data.VALUE);
           }
         }
 
@@ -197,7 +205,7 @@
     }, {
       key: "remove",
       value: function remove() {
-        var list = document.querySelector("[".concat(Selector.LIST, "]"));
+        var list = document.querySelector("[".concat(Data.LIST, "]"));
         if (list) list.parentElement.removeChild(list);
       }
     }]);
@@ -206,26 +214,12 @@
   }();
 
   document.addEventListener("click", Selectarr.applyValue);
-  new Selectarr(".test", [{
-    text: "one",
-    value: 0
-  }, {
-    text: "two",
-    value: 1
-  }, {
-    text: "three",
-    value: 2
-  }]);
-  new Selectarr(".testt", [{
-    text: "one",
-    value: 0
-  }, {
-    text: "two",
-    value: 1
-  }, {
-    text: "three",
-    value: 2
-  }]);
+  new Selectarr(".test", {
+    values: [{
+      text: "hello",
+      value: "hi"
+    }]
+  });
 
   return Selectarr;
 

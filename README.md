@@ -1,34 +1,30 @@
 # Selectarr
 
-Include in JavaScript:
+## Javascript
 
 ```js
 import Selectarr from "selectarr";
 ```
 
-Include in Sass:
-
-```css
-@import "~selectarr/src/stylesheets/style";
-```
-
-Selectarr class takes input selector and array of objects.
+Selectarr class takes an input selector and an options object.
 
 ```js
-const values = [
-  {
-    text: "James Welch",
-    value: "james"
-  },
-  {
-    text: "John Doe",
-    value: "john"
-  },
-  {
-    text: "Foo Bar",
-    value: "foo"
-  },
-]
+const options = {
+  values: [
+    {
+      text: "James Welch",
+      value: "james"
+    },
+    {
+      text: "John Doe",
+      value: "john"
+    },
+    {
+      text: "Foo Bar",
+      value: "foo"
+    },
+  ]
+};
 
 new Selectarr(".input", values);
 ```
@@ -41,11 +37,61 @@ Input element requires `data-selectarr` attribute.
 
 Selectarr will add some needed HTML, so the example above would output:
 
+**note**: By default, the base class name will be `selectarr`.
+
 ```html
-<div style="display: inline-block; position: relative;">
-  <input class="input" type="text" data-selectarr>
-  <input class="selectarr" type="hidden" name="username">
+<div class="selectarr">
+  <input class="input" id="input" type="text" data-selectarr>
+  <input class="selectarr-input" type="hidden" name="username">
 </div>
 ```
 
-The initial input will not be submitted along with any forms as the name attribute is omitted.
+To change this base class name:
+
+```js
+const options = {
+  class: "foobar",
+  values: [] //...
+};
+```
+
+Output:
+
+```html
+<div class="foobar">
+  <input class="input" id="input" type="text" data-selectarr>
+  <input class="foobar-input" type="hidden" name="username">
+</div>
+```
+
+| Element       | Class name     |
+| ------------- | -------------- |
+| Parent        | `<class>`      |
+| Hidden input  | `<class>-input`|
+| List          | `<class>-list` |
+| List item     | `<class>-item` |
+
+As stated above, the default class name is `selectarr`.
+
+The initial input will not be submitted along with any forms as the name attribute is copied over to the hidden input and then removed.
+
+## CSS
+
+Include in Sass:
+
+```css
+@import "~selectarr/src/stylesheets/style";
+```
+
+**note**: This stylesheet includes styles for only the default class names.
+
+Sass variables *used for the generated list of values*: 
+
+| Element                   | Default value  | Description                                        |
+| ------------------------- | -------------- | -------------------------------------------------- |
+| $selectarr-border         | `1px`          | Border width                                       |
+| $selectarr-border-color   | `#e8ebec`      | Border colour                                      |
+| $selectarr-bg             | `#fff`         | Background colour                                  |
+| $selectarr-zindex         | `10`           | z-index                                            |
+| $selectarr-item-spacing-y | `.6rem`        | Padding **top and bottom** of each list item       |
+| $selectarr-item-spacing-x | `1.2rem`       | Padding **left and right** of each list item       |

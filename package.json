@@ -1,8 +1,8 @@
 {
   "name": "selectarr",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Simple input searching",
-  "main": "dist/javascripts/selectarr.js",
+  "main": "dist/javascripts/selectarr.min.js",
   "scripts": {
     "start": "nodemon ./bin/www ",
     "build-js": "rollup --config build/rollup.config.js",

@@ -1,14 +1,19 @@
-const Selector = {
-  CLASS: "selectarr",
+const Data = {
   INPUT: "data-selectarr",
   LIST: "data-selectarr-list",
   ITEM: "data-selectarr-item",
   VALUE: "data-selectarr-value",
-  ITEMACTIVE: "selectarr-active"
+}
+
+const Class = {
+  INPUT: "-input",
+  LIST: "-list",
+  ITEM: "-item",
+  ITEMACTIVE: "-active",
 }
 
 class Selectarr {
-  constructor(element = `[${Selector.INPUT}]`, data = [{}]) {
+  constructor(element = `[${Data.INPUT}]`, data = {}) {
     this.init              = this.init.bind(this);
     this.search            = this.search.bind(this);
     this.createList        = this.createList.bind(this);
@@ -20,10 +25,11 @@ class Selectarr {
     this.mouseEnter        = this.mouseEnter.bind(this);
 
     this._element = document.querySelector(element);
+    this._class   = "class" in data ? data.class : "selectarr";
     this._data    = data;
     this._index   = -1;
 
-    if (this._element) {
+    if (this._element && "values" in data) {
       this.init();
     }
   }
@@ -32,20 +38,21 @@ class Selectarr {
     let list, listItem, input, valueInput;
 
     list = "key" in event ? 
-      event.target.parentElement.querySelector(`[${Selector.LIST}]`) :
-      event.target.closest(`[${Selector.LIST}]`);
+      event.target.parentElement.querySelector(`[${Data.LIST}]`) :
+      event.target.closest(`[${Data.LIST}]`);
 
-    if (list) listItem = event.target.closest(`[${Selector.ITEM}]`) ||
-                         list.querySelector(`[${Selector.ITEM}="${index}"]`);
+    if (list) listItem = event.target.closest(`[${Data.ITEM}]`) ||
+                         list.querySelector(`[${Data.ITEM}="${index}"]`);
     if (listItem) {
-      let parent = list.parentElement;
+      let parent      = list.parentElement,
+          parentClass = parent.className;
 
-      input      = parent.querySelector(`[${Selector.INPUT}]`);
-      valueInput = parent.querySelector(`.${Selector.CLASS}`);
+      input      = parent.querySelector(`[${Data.INPUT}]`);
+      valueInput = parent.querySelector(`.${parentClass}${Class.INPUT}`);
 
       if (input && valueInput) {
         input.value      = listItem.textContent;
-        valueInput.value = listItem.getAttribute(Selector.VALUE);
+        valueInput.value = listItem.getAttribute(Data.VALUE);
       }
     }
 
@@ -53,41 +60,38 @@ class Selectarr {
   }
 
   static remove() {
-    const list = document.querySelector(`[${Selector.LIST}]`);
+    const list = document.querySelector(`[${Data.LIST}]`);
     if (list) list.parentElement.removeChild(list);
   }
 
   init() {
-    const clone      = this._element.cloneNode(),
-          valueInput = clone.cloneNode(),
-          wrapper    = this._element.parentElement;
+    const input  = this._element.cloneNode(),
+          parent = this._element.parentElement;
 
-    clone.removeAttribute("name");
-    clone.addEventListener("keyup", this.search);
+    this._element.removeAttribute("name");
+    this._element.addEventListener("keyup", this.search);
 
-    valueInput.className = Selector.CLASS;
-    valueInput.type = "hidden";
-    valueInput.removeAttribute(Selector.INPUT);
+    input.className = `${this._class}${Class.INPUT}`;
+    input.type = "hidden";
+    input.removeAttribute("id");
+    input.removeAttribute(Data.INPUT);
     
     this._parent = document.createElement("div");
-    this._parent.style.display = "inline-block";
-    this._parent.style.position = "relative";
+    this._parent.className = this._class;
     
-    this._parent.appendChild(clone);
-    this._parent.appendChild(valueInput);
-
-    wrapper.replaceChild(this._parent, this._element);
-
-    this._element = clone;
+    parent.replaceChild(this._parent, this._element);
+    
+    this._parent.appendChild(this._element);
+    this._parent.appendChild(input);
   }
 
   search(event) {
-    const eventKey  = event.key,
-          usefulKey = eventKey === "ArrowUp"   || 
-                      eventKey === "ArrowDown" || 
-                      eventKey === "Enter";
+    const eventKey = event.key,
+          key      = eventKey === "ArrowUp"   || 
+                     eventKey === "ArrowDown" || 
+                     eventKey === "Enter";
 
-    if (usefulKey) {
+    if (key) {
       this.key(event, event.key);
       return;
     }
@@ -98,7 +102,8 @@ class Selectarr {
     if (!this._element.value.length) return null;
 
     const test  = new RegExp(this._element.value, 'gi'),
-          match = this._data.filter(name => name.text.match(test));
+          match = this._data.values.filter(data => 
+            data.hasOwnProperty("text") && data.text.match(test));
 
     if (match.length) {
       this.createList(match);
@@ -109,14 +114,16 @@ class Selectarr {
     const list = document.createElement("ul");
     let listItem;
 
-    list.setAttribute(Selector.LIST, "");
+    list.className = `${this._class}${Class.LIST}`;
+    list.setAttribute(Data.LIST, "");
 
     data.forEach((obj, index) => {
       listItem = document.createElement("li");
-      listItem.setAttribute(Selector.VALUE, obj.value);
-      listItem.setAttribute(Selector.ITEM, index);
       listItem.textContent = obj.text;
-      listItem.addEventListener("mouseenter", this.hover);
+      listItem.className   = `${this._class}${Class.ITEM}`;
+      listItem.setAttribute(Data.VALUE, obj.value || obj.text);
+      listItem.setAttribute(Data.ITEM, index);
+      listItem.addEventListener("mouseenter", this.mouseEnter);
 
       list.appendChild(listItem);
     });
@@ -125,17 +132,17 @@ class Selectarr {
   }
 
   changeActive() {
-    const listItems = document.querySelectorAll(`[${Selector.ITEM}]`);
+    const listItems = document.querySelectorAll(`[${Data.ITEM}]`);
     if (!listItems.length) return null;
 
-    const active = document.querySelector(`.${Selector.ITEMACTIVE}`);
-    if (active) active.className = "";
+    const active = document.querySelector(`.${this._class}${Class.ITEMACTIVE}`);
+    if (active) active.classList.remove(this._class + Class.ITEMACTIVE);
 
-    listItems[this._index].className = Selector.ITEMACTIVE; 
+    listItems[this._index].classList.add(this._class + Class.ITEMACTIVE);
   }
 
   key(event, key) {
-    const listItems = document.querySelectorAll(`[${Selector.ITEM}]`);
+    const listItems = document.querySelectorAll(`[${Data.ITEM}]`);
     if (!listItems.length) return null;
 
     this[`key${key}`](event, listItems);
@@ -162,15 +169,21 @@ class Selectarr {
   }
 
   mouseEnter(event) {
-    const listItem = event.target.closest(`[${Selector.ITEM}]`);
+    const listItem = event.target.closest(`[${Data.ITEM}]`);
     if (!listItem) return null;
 
-    this._index = parseInt(listItem.getAttribute(Selector.ITEM), 10);
+    this._index = parseInt(listItem.getAttribute(Data.ITEM), 10);
 
     this.changeActive();
   }
 }
 
 document.addEventListener("click", Selectarr.applyValue);
+
+new Selectarr(".test", {
+  values: [
+    {text: "hello", value: "hi"}
+  ]
+});
 
 export default Selectarr;
