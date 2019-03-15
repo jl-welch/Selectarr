@@ -61,10 +61,9 @@
       this._class = "class" in data ? data.class : "selectarr";
       this._data = data;
       this._index = -1;
-
-      if (this._element && "values" in data) {
-        this.init();
-      }
+      this._limit = this.setLimit();
+      if (!this._element || !this._data.values) return null;
+      this.init();
     }
 
     _createClass(Selectarr, [{
@@ -90,28 +89,32 @@
         this._parent.appendChild(input);
       }
     }, {
+      key: "setLimit",
+      value: function setLimit() {
+        return this._data.limit && +this._data.limit > 0 ? +this._data.limit : 10;
+      }
+    }, {
+      key: "match",
+      value: function match(string) {
+        return this._data.values.filter(function (data) {
+          return data.hasOwnProperty("text") && data.text.match(string);
+        }).sort(function (a, b) {
+          return a.text.localeCompare(b.text);
+        });
+      }
+    }, {
       key: "search",
       value: function search(event) {
         var eventKey = event.key,
             key = eventKey === "ArrowUp" || eventKey === "ArrowDown" || eventKey === "Enter";
-
-        if (key) {
-          this.key(event, event.key);
-          return;
-        }
-
+        if (key) return this.key(event, event.key);
         Selectarr.remove();
         this._index = -1;
         if (!this._element.value.length) return null;
-
         var test = new RegExp(this._element.value, 'gi'),
-            match = this._data.values.filter(function (data) {
-          return data.hasOwnProperty("text") && data.text.match(test);
-        });
-
-        if (match.length) {
-          this.createList(match);
-        }
+            match = this.match(test);
+        if (!match.length) return null;
+        this.createList(match.slice(0, this._limit));
       }
     }, {
       key: "createList",
@@ -120,7 +123,7 @@
 
         var list = document.createElement("ul");
         var listItem;
-        list.className = "".concat(this._class).concat(Class.LIST);
+        list.className = this._class + Class.LIST;
         list.setAttribute(Data.LIST, "");
         data.forEach(function (obj, index) {
           listItem = document.createElement("li");
@@ -161,7 +164,7 @@
     }, {
       key: "keyArrowUp",
       value: function keyArrowUp() {
-        if (this._index === 0 || this._index === -1) return null;
+        if (this._index <= 0) return null;
         this._index--;
         this.changeActive();
       }
@@ -184,20 +187,17 @@
       key: "applyValue",
       value: function applyValue(event) {
         var index = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
-        var list, listItem, input, valueInput;
+        var list, listItem, parent, input, valueInput;
         list = "key" in event ? event.target.parentElement.querySelector("[".concat(Data.LIST, "]")) : event.target.closest("[".concat(Data.LIST, "]"));
         if (list) listItem = event.target.closest("[".concat(Data.ITEM, "]")) || list.querySelector("[".concat(Data.ITEM, "=\"").concat(index, "\"]"));
 
         if (listItem) {
-          var parent = list.parentElement,
-              parentClass = parent.className;
+          parent = list.parentElement;
           input = parent.querySelector("[".concat(Data.INPUT, "]"));
-          valueInput = parent.querySelector(".".concat(parentClass).concat(Class.INPUT));
-
-          if (input && valueInput) {
-            input.value = listItem.textContent;
-            valueInput.value = listItem.getAttribute(Data.VALUE);
-          }
+          valueInput = parent.querySelector(".".concat(parent.className).concat(Class.INPUT));
+          if (!input || !valueInput) return null;
+          input.value = listItem.textContent;
+          valueInput.value = listItem.getAttribute(Data.VALUE);
         }
 
         Selectarr.remove();
@@ -215,8 +215,43 @@
 
   document.addEventListener("click", Selectarr.applyValue);
   new Selectarr(".test", {
+    limit: 3,
+    // url: "https://jsonplaceholder.typicode.com/posts",
     values: [{
-      text: "hello",
+      text: "a belly",
+      value: "hi"
+    }, {
+      text: "a aelly",
+      value: "hi"
+    }, {
+      text: "a telly",
+      value: "hi"
+    }, {
+      text: "a helly",
+      value: "hi"
+    }, {
+      text: "a nelly",
+      value: "hi"
+    }, {
+      text: "a celly",
+      value: "hi"
+    }, {
+      text: "a uelly",
+      value: "hi"
+    }, {
+      text: "a oelly",
+      value: "hi"
+    }, {
+      text: "a aelly",
+      value: "hi"
+    }, {
+      text: "a celly",
+      value: "hi"
+    }, {
+      text: "a pelly",
+      value: "hi"
+    }, {
+      text: "a lelly",
       value: "hi"
     }]
   });
