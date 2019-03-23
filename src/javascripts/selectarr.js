@@ -5,186 +5,201 @@ const Data = {
 	VALUE: "data-selectarr-value",
 }
 
-const Class = {
+const ClassName = {
 	INPUT: 			"-input",
 	LIST: 			"-list",
+	LISTOPEN:		"open",
 	ITEM: 			"-item",
 	ITEMACTIVE: "-active",
 }
 
 class Selectarr {
 	constructor(element = `[${Data.INPUT}]`, data = {}) {
-		this.init					= this.init.bind(this);
-		this.search				= this.search.bind(this);
-		this.createList		= this.createList.bind(this);
-		this.changeActive	= this.changeActive.bind(this);
-		this.key					= this.key.bind(this);
-		this.keyEnter			= this.keyEnter.bind(this);
-		this.keyArrowUp		= this.keyArrowUp.bind(this);
-		this.keyArrowDown	= this.keyArrowDown.bind(this);
-		this.mouseEnter		= this.mouseEnter.bind(this);
+		this._search			 = this._search.bind(this);
+		this._applyValue	 = this._applyValue.bind(this);
 
 		this._element = document.querySelector(element);
-		this._class		= "class" in data ? data.class : "selectarr";
+		this._list		= document.createElement("ul");
+		this._hidden	= null;
+		this._wrapper = null;
+		this._length 	= null;
 		this._data		= data;
 		this._index		= -1;
-		this._limit = this.setLimit();
+		this._limit 	= this.setLimit();
+		this._class		= "class" in data ? data.class : "selectarr";
 
 		if (!this._element || !this._data.values) return null;
-		
+
 		this.init();
-  }
-
-	static applyValue(event, index = null) {
-		let list, listItem, parent, input, valueInput;
-
-		list = "key" in event ? 
-			event.target.parentElement.querySelector(`[${Data.LIST}]`) :
-			event.target.closest(`[${Data.LIST}]`);
-
-		if (list)
-			listItem = event.target.closest(`[${Data.ITEM}]`) || list.querySelector(`[${Data.ITEM}="${index}"]`);
-
-		if (listItem) {
-			parent			= list.parentElement;
-			input			 	= parent.querySelector(`[${Data.INPUT}]`);
-			valueInput 	= parent.querySelector(`.${parent.className}${Class.INPUT}`);
-
-			if (!input || !valueInput) return null;
-			
-			input.value			 = listItem.textContent;
-			valueInput.value = listItem.getAttribute(Data.VALUE);
-		}
-
-		Selectarr.remove();
 	}
-
-	static remove() {
-		const list = document.querySelector(`[${Data.LIST}]`);
-		if (list) list.parentElement.removeChild(list);
-	}
+	
+	// Public
 
 	init() {
-		const input  = this._element.cloneNode(),
-					parent = this._element.parentElement;
+		const parent = this._element.parentElement;
+		
+		// Create a hidden select to be submitted with value
+		this._hidden = document.createElement("input"),
 
+		this._hidden.className = `${this._class}${ClassName.INPUT}`;
+		this._hidden.name 		 = this._element.name;
+		this._hidden.type 		 = "hidden";
+					
+		// Don't submit visible selectarr input
 		this._element.removeAttribute("name");
-		this._element.addEventListener("keyup", this.search);
+		this._element.addEventListener("keyup", this._search);
+		this._list.addEventListener("click", this._applyValue);
 
-		input.className = `${this._class}${Class.INPUT}`;
-		input.type = "hidden";
-		input.removeAttribute("id");
-		input.removeAttribute(Data.INPUT);
+		this._list.className = this._class + ClassName.LIST;
+		this._list.setAttribute(Data.LIST, "");
 
-		this._parent = document.createElement("div");
-		this._parent.className = this._class;
+		// Wrapper for our selectarr elements
+		this._wrapper 					= document.createElement("div");
+		this._wrapper.className = this._class;
 
-		parent.replaceChild(this._parent, this._element);
+		parent.replaceChild(this._wrapper, this._element);
+		
+		// Populate wrapper
+		this._wrapper.appendChild(this._element);
+		this._wrapper.appendChild(this._hidden);
+		this._wrapper.appendChild(this._list);
 
-		this._parent.appendChild(this._element);
-		this._parent.appendChild(input);
 	}
 
-	setLimit() {
-		return (this._data.limit && +this._data.limit > 0) ? +this._data.limit : 10;
+	addActive() {
+		// Remove active before applying new one
+		this.removeActive();
+
+		const listItems = this._list.querySelectorAll(`[${Data.ITEM}]`);
+		if (!listItems.length || this._index < 0 || this._index > listItems.length) 
+			return null;
+
+		listItems[this._index].classList.add(this._class + ClassName.ITEMACTIVE);
 	}
 
-	match(string) {
+	removeActive() {
+		const active = this._list.querySelector(`.${this._class}${ClassName.ITEMACTIVE}`);
+		if (active) active.classList.remove(this._class + ClassName.ITEMACTIVE);
+	}
+
+	setLimit(int) {
+		const limit = int || this._data.limit;
+		return (limit && +limit > 0) ? +limit : 10;
+	}
+
+	// Private
+
+	_applyValue(event) {
+		let listItem = event.target.closest(`[${Data.ITEM}]`) || 
+									 this._list.querySelector(`[${Data.ITEM}="${this._index}"]`);
+
+		if (!listItem) return null;
+			
+		this._element.value = listItem.textContent;
+		this._hidden.value	= listItem.getAttribute(Data.VALUE);
+
+		Selectarr._removeList();
+	}
+
+	_populateList(array) {
+		let listItem;
+		this._length = array.length - 1;
+
+		array.forEach((obj, index) => {
+			listItem = document.createElement("li");
+			listItem.textContent = obj.text;
+			listItem.className	 = `${this._class}${ClassName.ITEM}`;
+			listItem.setAttribute(Data.VALUE, obj.value || obj.text);
+			listItem.setAttribute(Data.ITEM, index);
+			listItem.addEventListener("mouseenter", this._mouseEnter);
+
+			this._list.appendChild(listItem);
+
+			this._list.classList.add(ClassName.LISTOPEN);
+		});
+	}
+
+	_match(string) {
+		// Return array of strings that match our input value
 		return this._data.values.filter(data => 
 			data.hasOwnProperty("text") && data.text.match(string))
 			.sort((a, b) => a.text.localeCompare(b.text));
 	}
 
-	search(event) {
+	_search(event) {
 		const eventKey = event.key,
 					key			 = eventKey === "ArrowUp"   || 
 										 eventKey === "ArrowDown" || 
 										 eventKey === "Enter";
 
-		if (key) return this.key(event, event.key);
+		if (key) return this._key(event, event.key);
 
-		Selectarr.remove();
+		Selectarr._removeList();
 
 		this._index = -1;
 		
 		if (!this._element.value.length) return null;
 
 		const test  = new RegExp(this._element.value, 'gi'),
-					match = this.match(test);
+					match = this._match(test).slice(0, this._limit);
 
-		if (!match.length) return null;
-		
-		this.createList(match.slice(0, this._limit));
+		if (match.length) this._populateList(match);
 	}
 
-	createList(data) {
-		const list = document.createElement("ul");
-		let listItem;
+	_key(event) {
+		this[`_key${event.key}`](event);
 
-		list.className = this._class + Class.LIST;
-		list.setAttribute(Data.LIST, "");
-
-		data.forEach((obj, index) => {
-			listItem = document.createElement("li");
-			listItem.textContent = obj.text;
-			listItem.className   = `${this._class}${Class.ITEM}`;
-			listItem.setAttribute(Data.VALUE, obj.value || obj.text);
-			listItem.setAttribute(Data.ITEM, index);
-			listItem.addEventListener("mouseenter", this.mouseEnter);
-
-			list.appendChild(listItem);
-		});
-
-		this._parent.appendChild(list);
+		if (event.key !== "Enter") this.addActive();
 	}
 
-	changeActive() {
-		const listItems = document.querySelectorAll(`[${Data.ITEM}]`);
-		if (!listItems.length) return null;
+	_keyArrowUp() {
+		if (this._index > 0) this._index--;
+	} 
 
-		const active = document.querySelector(`.${this._class}${Class.ITEMACTIVE}`);
-		if (active) active.classList.remove(this._class + Class.ITEMACTIVE);
-
-		listItems[this._index].classList.add(this._class + Class.ITEMACTIVE);
+	_keyArrowDown() {
+		if (this._index < this._length) this._index++;
 	}
 
-	key(event, key) {
-		const listItems = document.querySelectorAll(`[${Data.ITEM}]`);
-		if (!listItems.length) return null;
-
-		this[`key${key}`](event, listItems);
-	}
-
-	keyEnter(event) {
+	_keyEnter(event) {
 		if (this._index === -1) return null;
 
-		Selectarr.applyValue(event, this._index);
+		this._applyValue(event, this._index);
 		this._index = -1;
 	}
 
-	keyArrowUp() {
-		if (this._index <= 0) return null;
-
-		this._index--;
-		this.changeActive();
-	} 
-
-	keyArrowDown(event, listItems) {
-		if (this._index === listItems.length - 1) return null;
-
-		this._index++;
-		this.changeActive();
+	_mouseEnter(event) {
+		const listItem = event.target.closest(`[${Data.ITEM}]`);
+		if (listItem) this._index = parseInt(listItem.getAttribute(Data.ITEM), 10);
 	}
 
-	mouseEnter(event) {
-		const listItem = event.target.closest(`[${Data.ITEM}]`);
-		if (!listItem) return null;
+	// Static
 
-		this._index = parseInt(listItem.getAttribute(Data.ITEM), 10);
-		this.changeActive();
+	static _checkSibling(target) {
+		if (!target) return null;
+
+		const wrapper	= target.parentElement;
+		const sibling = wrapper.querySelector(`[${Data.LIST}].${ClassName.LISTOPEN}`);
+
+		return sibling;
+	}
+
+	static _removeList(event = null) {
+		if (event) {
+			const target = event.target.closest(`[${Data.INPUT}]`);
+			const isSibling = Selectarr._checkSibling(target);
+
+			if (isSibling) return null;
+		}
+
+		const list = document.querySelector(`[${Data.LIST}].${ClassName.LISTOPEN}`);
+
+		if (!list) return;
+
+		list.classList.remove(ClassName.LISTOPEN);
+		list.innerHTML = "";
 	}
 }
 
-document.addEventListener("click", Selectarr.applyValue);
+document.addEventListener("click", Selectarr._removeList);
 
 export default Selectarr;
