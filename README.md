@@ -62,8 +62,8 @@ Output:
 ```html
 <div class="foobar">
   <input class="input" id="input" type="text" data-selectarr>
-	<input class="foobar-input" type="hidden" name="username">
-	<ul class="foobar-list" data-selectarr-list></ul>
+  <input class="foobar-input" type="hidden" name="username">
+  <ul class="foobar-list" data-selectarr-list></ul>
 </div>
 ```
 

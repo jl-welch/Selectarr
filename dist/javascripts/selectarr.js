@@ -173,9 +173,9 @@
 
         this._index = -1;
         if (!this._element.value.length) return null;
+        var test = new RegExp(this._element.value, 'gi');
 
-        var test = new RegExp(this._element.value, 'gi'),
-            match = this._match(test).slice(0, this._limit);
+        var match = this._match(test).slice(0, this._limit);
 
         if (match.length) this._populateList(match);
       }
@@ -242,35 +242,6 @@
     return Selectarr;
   }();
 
-  var sel = new Selectarr(".test", {
-    limit: 5,
-    class: "hello",
-    values: [{
-      text: "howdy",
-      value: "1"
-    }, {
-      text: "hello",
-      value: "1"
-    }, {
-      text: "hola",
-      value: "1"
-    }, {
-      text: "hi",
-      value: "1"
-    }, {
-      text: "labas",
-      value: "1"
-    }, {
-      text: "bonjous",
-      value: "1"
-    }, {
-      text: "priviet",
-      value: "1"
-    }, {
-      text: "sveiki",
-      value: "1"
-    }]
-  });
   document.addEventListener("click", Selectarr._removeList);
 
   return Selectarr;
