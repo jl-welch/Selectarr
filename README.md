@@ -2,6 +2,8 @@
 
 ## Javascript
 
+### Turn simple text inputs into a select-type dropdown
+
 ```js
 import Selectarr from "selectarr";
 ```
@@ -60,7 +62,8 @@ Output:
 ```html
 <div class="foobar">
   <input class="input" id="input" type="text" data-selectarr>
-  <input class="foobar-input" type="hidden" name="username">
+	<input class="foobar-input" type="hidden" name="username">
+	<ul class="foobar-list" data-selectarr-list></ul>
 </div>
 ```
 
@@ -71,9 +74,19 @@ Output:
 | List          | `<class>-list` |
 | List item     | `<class>-item` |
 
-As stated above, the default class name is `selectarr`.
+As stated above, the default class name is `selectarr`. Make sure to apply styles if you change this.
 
-The initial input will not be submitted along with any forms as the name attribute is copied over to the hidden input and then removed.
+The initial text input will have its name attribute copied over to the hidden input, and so will not be submitted.
+
+### Options
+
+| Key           | Description                                                    |
+| ------------- | -------------------------------------------------------------- |
+| class         | String. Base class name                                        |
+| limit         | Number. Limits list items                                      |
+| values        | Array. List of objects that contains text and value properties |
+
+Simple enough.
 
 ## CSS
 

@@ -200,6 +200,45 @@ class Selectarr {
 	}
 }
 
+const sel = new Selectarr(".test", {
+	limit: 5,
+	class: "hello",
+	values: [
+		{
+			text: "howdy",
+			value: "1"
+		},
+		{
+			text: "hello",
+			value: "1"
+		},
+		{
+			text: "hola",
+			value: "1"
+		},
+		{
+			text: "hi",
+			value: "1"
+		},
+		{
+			text: "labas",
+			value: "1"
+		},
+		{
+			text: "bonjous",
+			value: "1"
+		},
+		{
+			text: "priviet",
+			value: "1"
+		},
+		{
+			text: "sveiki",
+			value: "1"
+		},
+	]
+})
+
 document.addEventListener("click", Selectarr._removeList);
 
 export default Selectarr;
