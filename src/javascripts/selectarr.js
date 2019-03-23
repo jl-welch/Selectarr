@@ -33,9 +33,9 @@ class Selectarr {
     this.init();
   }
 	
-	// Public
+  // Public
 
-	init() {
+  init() {
     const parent = this._element.parentElement;
 
     // Create a hidden select to be submitted with value
@@ -44,7 +44,7 @@ class Selectarr {
     this._hidden.className = `${this._class}${ClassName.INPUT}`;
     this._hidden.name      = this._element.name;
     this._hidden.type      = "hidden";
-          
+
     // Don't submit visible selectarr input
     this._element.removeAttribute("name");
     this._element.addEventListener("keyup", this._search);
@@ -63,7 +63,7 @@ class Selectarr {
     this._wrapper.appendChild(this._element);
     this._wrapper.appendChild(this._hidden);
     this._wrapper.appendChild(this._list);
-	}
+  }
 
   addActive() {
     // Remove active before applying new one
