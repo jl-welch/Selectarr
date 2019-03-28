@@ -4,6 +4,20 @@
   (global = global || self, global.selectarr = factory());
 }(this, function () { 'use strict';
 
+  function _typeof(obj) {
+    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+      _typeof = function (obj) {
+        return typeof obj;
+      };
+    } else {
+      _typeof = function (obj) {
+        return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+      };
+    }
+
+    return _typeof(obj);
+  }
+
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
       throw new TypeError("Cannot call a class as a function");
@@ -33,11 +47,11 @@
     VALUE: "data-selectarr-value"
   };
   var ClassName = {
-    INPUT: "-input",
-    LIST: "-list",
+    INPUT: "input",
+    LIST: "list",
     LISTOPEN: "open",
-    ITEM: "-item",
-    ITEMACTIVE: "-active"
+    ITEM: "item",
+    ITEMACTIVE: "active"
   };
 
   var Selectarr =
@@ -45,22 +59,26 @@
   function () {
     function Selectarr() {
       var element = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "[".concat(Data.INPUT, "]");
-      var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
       _classCallCheck(this, Selectarr);
 
+      if (typeof element !== "string") throw new Error("Type of element selector must be a string.");
+      if (_typeof(options) !== "object") throw new Error("Options must be an object.");
       this._search = this._search.bind(this);
       this._applyValue = this._applyValue.bind(this);
+      this._mouseEnter = this._mouseEnter.bind(this);
       this._element = document.querySelector(element);
+      if (!this._element) throw new Error("Cannot find element: ".concat(element));
+      this._items = options.items;
+      if (!this._items) throw new Error("Items does not exist: ".concat(this._items, ". Please pass an array of items to the options object."));
       this._list = document.createElement("ul");
+      this._index = -1;
+      this._limit = this.setLimit();
+      this._class = options.class || "selectarr";
       this._hidden = null;
       this._wrapper = null;
       this._length = null;
-      this._data = data;
-      this._index = -1;
-      this._limit = this.setLimit();
-      this._class = "class" in data ? data.class : "selectarr";
-      if (!this._element || !this._data.values) return null;
       this.init();
     } // Public
 
@@ -68,9 +86,14 @@
     _createClass(Selectarr, [{
       key: "init",
       value: function init() {
-        var parent = this._element.parentElement; // Create a hidden select to be submitted with value
+        // Wrapper for our selectarr elements
+        this._wrapper = document.createElement("div");
+        this._wrapper.className = this._class;
 
-        this._hidden = document.createElement("input"), this._hidden.className = "".concat(this._class).concat(ClassName.INPUT);
+        this._element.parentElement.replaceChild(this._wrapper, this._element); // Create a hidden select to be submitted with value
+
+
+        this._hidden = document.createElement("input"), this._hidden.className = "".concat(this._class, "-").concat(ClassName.INPUT);
         this._hidden.name = this._element.name;
         this._hidden.type = "hidden"; // Don't submit visible selectarr input
 
@@ -78,16 +101,12 @@
 
         this._element.addEventListener("keyup", this._search);
 
-        this._list.addEventListener("click", this._applyValue);
+        this._list.className = "".concat(this._class, "-").concat(ClassName.LIST);
 
-        this._list.className = this._class + ClassName.LIST;
+        this._list.setAttribute(Data.LIST, "");
 
-        this._list.setAttribute(Data.LIST, ""); // Wrapper for our selectarr elements
+        this._list.addEventListener("click", this._applyValue); // Populate wrapper
 
-
-        this._wrapper = document.createElement("div");
-        this._wrapper.className = this._class;
-        parent.replaceChild(this._wrapper, this._element); // Populate wrapper
 
         this._wrapper.appendChild(this._element);
 
@@ -105,20 +124,19 @@
 
         if (!listItems.length || this._index < 0 || this._index > listItems.length) return null;
 
-        listItems[this._index].classList.add(this._class + ClassName.ITEMACTIVE);
+        listItems[this._index].classList.add("".concat(this._class, "-").concat(ClassName.ITEMACTIVE));
       }
     }, {
       key: "removeActive",
       value: function removeActive() {
-        var active = this._list.querySelector(".".concat(this._class).concat(ClassName.ITEMACTIVE));
+        var active = this._list.querySelector(".".concat(this._class, "-").concat(ClassName.ITEMACTIVE));
 
-        if (active) active.classList.remove(this._class + ClassName.ITEMACTIVE);
+        if (active) active.classList.remove("".concat(this._class, "-").concat(ClassName.ITEMACTIVE));
       }
     }, {
       key: "setLimit",
       value: function setLimit(int) {
-        var limit = int || this._data.limit;
-        return limit && +limit > 0 ? +limit : 10;
+        return int && +int > 0 ? +int : 10;
       } // Private
 
     }, {
@@ -140,10 +158,20 @@
         var listItem;
         this._length = array.length - 1;
         array.forEach(function (obj, index) {
+          var value,
+              label = null;
+
+          if (_typeof(obj) === "object") {
+            label = obj.label || obj.value;
+            value = obj.value || obj.label;
+          } else {
+            value = label = obj;
+          }
+
           listItem = document.createElement("li");
-          listItem.textContent = obj.text;
-          listItem.className = "".concat(_this._class).concat(ClassName.ITEM);
-          listItem.setAttribute(Data.VALUE, obj.value || obj.text);
+          listItem.textContent = label;
+          listItem.className = "".concat(_this._class, "-").concat(ClassName.ITEM);
+          listItem.setAttribute(Data.VALUE, value);
           listItem.setAttribute(Data.ITEM, index);
           listItem.addEventListener("mouseenter", _this._mouseEnter);
 
@@ -156,10 +184,13 @@
       key: "_match",
       value: function _match(string) {
         // Return array of strings that match our input value
-        return this._data.values.filter(function (data) {
-          return data.hasOwnProperty("text") && data.text.match(string);
+        return this._items.filter(function (item) {
+          var label = typeof item === "string" ? item : item.label ? item.label : item.value;
+          return label.match(string);
         }).sort(function (a, b) {
-          return a.text.localeCompare(b.text);
+          var labelA = typeof a === "string" ? a : a.label ? a.label : a.value;
+          var labelB = typeof b === "string" ? b : b.label ? b.label : b.value;
+          labelA.localeCompare(labelB);
         });
       }
     }, {
@@ -209,6 +240,7 @@
       value: function _mouseEnter(event) {
         var listItem = event.target.closest("[".concat(Data.ITEM, "]"));
         if (listItem) this._index = parseInt(listItem.getAttribute(Data.ITEM), 10);
+        this.addActive();
       } // Static
 
     }], [{
@@ -243,6 +275,14 @@
   }();
 
   document.addEventListener("click", Selectarr._removeList);
+  new Selectarr(".input", {
+    class: "selectarr",
+    limit: 7,
+    items: ["hello!", {
+      label: "howdy",
+      value: "hola"
+    }]
+  });
 
   return Selectarr;
 

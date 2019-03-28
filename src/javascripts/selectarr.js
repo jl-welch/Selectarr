@@ -6,29 +6,37 @@ const Data = {
 }
 
 const ClassName = {
-  INPUT:      "-input",
-  LIST:       "-list",
+  INPUT:      "input",
+  LIST:       "list",
   LISTOPEN:   "open",
-  ITEM:       "-item",
-  ITEMACTIVE: "-active",
+  ITEM:       "item",
+  ITEMACTIVE: "active",
 }
 
 class Selectarr {
-  constructor(element = `[${Data.INPUT}]`, data = {}) {
+  constructor(element = `[${Data.INPUT}]`, options = {}) {
+    if (typeof element !== "string") throw new Error("Type of element selector must be a string.");
+    if (typeof options !== "object") throw new Error("Options must be an object.");
+    
     this._search     = this._search.bind(this);
     this._applyValue = this._applyValue.bind(this);
+    this._mouseEnter = this._mouseEnter.bind(this);
 
     this._element = document.querySelector(element);
+
+    if (!this._element) throw new Error(`Cannot find element: ${element}`);
+
+    this._items = options.items;
+
+    if (!this._items) throw new Error(`Items does not exist: ${this._items}. Please pass an array of items to the options object.`);
+
     this._list    = document.createElement("ul");
+    this._index   = -1;
+    this._limit   = this.setLimit();
+    this._class   = options.class || "selectarr";
     this._hidden  = null;
     this._wrapper = null;
     this._length  = null;
-    this._data    = data;
-    this._index   = -1;
-    this._limit   = this.setLimit();
-    this._class   = "class" in data ? data.class : "selectarr";
-
-    if (!this._element || !this._data.values) return null;
 
     this.init();
   }
@@ -36,28 +44,25 @@ class Selectarr {
   // Public
 
   init() {
-    const parent = this._element.parentElement;
+    // Wrapper for our selectarr elements
+    this._wrapper           = document.createElement("div");
+    this._wrapper.className = this._class;
+
+    this._element.parentElement.replaceChild(this._wrapper, this._element);
 
     // Create a hidden select to be submitted with value
-    this._hidden = document.createElement("input"),
-
-    this._hidden.className = `${this._class}${ClassName.INPUT}`;
+    this._hidden           = document.createElement("input"),
+    this._hidden.className = `${this._class}-${ClassName.INPUT}`;
     this._hidden.name      = this._element.name;
     this._hidden.type      = "hidden";
 
     // Don't submit visible selectarr input
     this._element.removeAttribute("name");
     this._element.addEventListener("keyup", this._search);
-    this._list.addEventListener("click", this._applyValue);
-
-    this._list.className = this._class + ClassName.LIST;
+    
+    this._list.className = `${this._class}-${ClassName.LIST}`;
     this._list.setAttribute(Data.LIST, "");
-
-    // Wrapper for our selectarr elements
-    this._wrapper           = document.createElement("div");
-    this._wrapper.className = this._class;
-
-    parent.replaceChild(this._wrapper, this._element);
+    this._list.addEventListener("click", this._applyValue);
 
     // Populate wrapper
     this._wrapper.appendChild(this._element);
@@ -73,17 +78,16 @@ class Selectarr {
     if (!listItems.length || this._index < 0 || this._index > listItems.length) 
       return null;
 
-    listItems[this._index].classList.add(this._class + ClassName.ITEMACTIVE);
+    listItems[this._index].classList.add(`${this._class}-${ClassName.ITEMACTIVE}`);
   }
 
   removeActive() {
-    const active = this._list.querySelector(`.${this._class}${ClassName.ITEMACTIVE}`);
-    if (active) active.classList.remove(this._class + ClassName.ITEMACTIVE);
+    const active = this._list.querySelector(`.${this._class}-${ClassName.ITEMACTIVE}`);
+    if (active) active.classList.remove(`${this._class}-${ClassName.ITEMACTIVE}`);
   }
 
   setLimit(int) {
-    const limit = int || this._data.limit;
-    return (limit && +limit > 0) ? +limit : 10;
+    return (int && +int > 0) ? +int : 10;
   }
 
 	// Private
@@ -105,10 +109,19 @@ class Selectarr {
     this._length = array.length - 1;
 
     array.forEach((obj, index) => {
+      let value, label = null;
+
+      if (typeof obj === "object") {
+        label = obj.label || obj.value;
+        value = obj.value || obj.label;
+      } else {
+        value = label = obj;
+      }
+
       listItem = document.createElement("li");
-      listItem.textContent = obj.text;
-      listItem.className   = `${this._class}${ClassName.ITEM}`;
-      listItem.setAttribute(Data.VALUE, obj.value || obj.text);
+      listItem.textContent = label;
+      listItem.className   = `${this._class}-${ClassName.ITEM}`;
+      listItem.setAttribute(Data.VALUE, value);
       listItem.setAttribute(Data.ITEM, index);
       listItem.addEventListener("mouseenter", this._mouseEnter);
 
@@ -120,9 +133,16 @@ class Selectarr {
 
   _match(string) {
     // Return array of strings that match our input value
-    return this._data.values.filter(data => 
-      data.hasOwnProperty("text") && data.text.match(string))
-      .sort((a, b) => a.text.localeCompare(b.text));
+    return this._items.filter(item => {
+      const label = typeof item === "string" ? item : item.label ? item.label : item.value;
+
+      return label.match(string);
+    }).sort((a, b) => { 
+      const labelA = typeof a === "string" ? a : a.label ? a.label : a.value;
+      const labelB = typeof b === "string" ? b : b.label ? b.label : b.value;
+
+      labelA.localeCompare(labelB);
+    });
   }
 
   _search(event) {
@@ -169,6 +189,7 @@ class Selectarr {
   _mouseEnter(event) {
     const listItem = event.target.closest(`[${Data.ITEM}]`);
     if (listItem) this._index = parseInt(listItem.getAttribute(Data.ITEM), 10);
+    this.addActive();
   }
 
 	// Static
@@ -202,3 +223,15 @@ class Selectarr {
 document.addEventListener("click", Selectarr._removeList);
 
 export default Selectarr;
+
+new Selectarr(".input", {
+  class: "selectarr",
+  limit: 7,
+  items: [
+    "hello!",
+    {
+      label: "howdy",
+      value: "hola"
+    }
+  ]
+})

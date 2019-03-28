@@ -9,26 +9,28 @@ import Selectarr from "selectarr";
 
 #### Creation
 
-| Parameter     | Description                   |
-| ------------- | ----------------------------- |
-| `element`     | `String` The element selector |
-| `options`     | `Object` All of the options   |
+| Parameter     | Description          | Type     |
+| ------------- | -------------------- | -------- |
+| `element`     | The element selector | `String` |
+| `options`     | All of the options   | `Object` |
 
 ```js
 const options = {
   class: "custom-select",
   limit: 5,
   values: [
+    "Single string for label and value",
+    "Another one",
     {
-      text: "James Welch",
-      value: "james"
+      label: "Or an object for different label and values.",
+      value: "object-label-value"
     },
     {
-      text: "John Doe",
+      label: "John Doe",
       value: "john"
     },
     {
-      text: "Foo Bar",
+      label: "Foo Bar",
       value: "foo"
     },
   ]
@@ -39,11 +41,11 @@ new Selectarr(".input", options);
 
 ##### Options
 
-| Key           | Description                                                    | Default     |
-| ------------- | -------------------------------------------------------------- | ----------- |
-| class         | String. Base class name                                        | `Selectarr` |
-| limit         | Number. Limits list items                                      | `10`        |
-| values        | Array. List of objects that contains text and value properties |             |
+| Key           | Description                                                       | Default     | Type     |
+| ------------- | ----------------------------------------------------------------- | ----------- | -------- |
+| class         | Base class name                                                   | `Selectarr` | `String` |
+| limit         | Limits list items                                                 | `10`        | `Number` |
+| items         | Array of objects with label and values or single string for both. |             | `Array`  |
 
 ## HTML
 
