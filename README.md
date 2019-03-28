@@ -1,17 +1,23 @@
 # Selectarr
+### Turn simple text inputs into a select-type dropdown
 
 ## Javascript
-
-### Turn simple text inputs into a select-type dropdown
 
 ```js
 import Selectarr from "selectarr";
 ```
 
-Selectarr class takes an input selector and an options object.
+#### Creation
+
+| Parameter     | Description                   |
+| ------------- | ----------------------------- |
+| `element`     | `String` The element selector |
+| `options`     | `Object` All of the options   |
 
 ```js
 const options = {
+  class: "custom-select",
+  limit: 5,
   values: [
     {
       text: "James Welch",
@@ -28,44 +34,36 @@ const options = {
   ]
 };
 
-new Selectarr(".input", values);
+new Selectarr(".input", options);
 ```
 
-Input element requires `data-selectarr` attribute.
+##### Options
+
+| Key           | Description                                                    | Default     |
+| ------------- | -------------------------------------------------------------- | ----------- |
+| class         | String. Base class name                                        | `Selectarr` |
+| limit         | Number. Limits list items                                      | `10`        |
+| values        | Array. List of objects that contains text and value properties |             |
+
+## HTML
+
+Your input element requires the attribute `data-selectarr`.
 
 ```html
 <input class="input" type="text" name="username" data-selectarr>
 ```
 
-Selectarr will add some needed HTML, so the example above would output:
-
-**note**: By default, the base class name will be `selectarr`.
+Selectarr will add some needed HTML:
 
 ```html
 <div class="selectarr">
   <input class="input" id="input" type="text" data-selectarr>
   <input class="selectarr-input" type="hidden" name="username">
+  <ul class="selectarr-list" data-selectarr-list></ul>
 </div>
 ```
 
-To change this base class name:
-
-```js
-const options = {
-  class: "foobar",
-  values: [] //...
-};
-```
-
-Output:
-
-```html
-<div class="foobar">
-  <input class="input" id="input" type="text" data-selectarr>
-  <input class="foobar-input" type="hidden" name="username">
-  <ul class="foobar-list" data-selectarr-list></ul>
-</div>
-```
+The classes used on the generated HTML are defaulted to `selectarr`, unless changed in the options.
 
 | Element       | Class name     |
 | ------------- | -------------- |
@@ -74,19 +72,7 @@ Output:
 | List          | `<class>-list` |
 | List item     | `<class>-item` |
 
-As stated above, the default class name is `selectarr`. Make sure to apply styles if you change this.
-
 The initial text input will have its name attribute copied over to the hidden input, and so will not be submitted.
-
-### Options
-
-| Key           | Description                                                    |
-| ------------- | -------------------------------------------------------------- |
-| class         | String. Base class name                                        |
-| limit         | Number. Limits list items                                      |
-| values        | Array. List of objects that contains text and value properties |
-
-Simple enough.
 
 ## CSS
 
@@ -96,7 +82,7 @@ Include in Sass:
 @import "~selectarr/src/stylesheets/style";
 ```
 
-**note**: This stylesheet includes styles for only the default class names.
+**note**: This stylesheet includes styles for the default class names.
 
 Sass variables *used for the generated list of values*: 
 
