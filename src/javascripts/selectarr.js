@@ -38,12 +38,34 @@ class Selectarr {
     this._wrapper = null;
     this._length  = null;
 
-    this.init();
+    this._init();
   }
 	
   // Public
 
-  init() {
+  addActive() {
+    // Remove active before applying new one
+    this.removeActive();
+
+    const listItems = this._list.querySelectorAll(`[${Data.ITEM}]`);
+    if (!listItems.length || this._index < 0 || this._index > listItems.length) 
+      return null;
+
+    listItems[this._index].classList.add(`${this._class}-${ClassName.ITEMACTIVE}`);
+  }
+
+  removeActive() {
+    const active = this._list.querySelector(`.${this._class}-${ClassName.ITEMACTIVE}`);
+    if (active) active.classList.remove(`${this._class}-${ClassName.ITEMACTIVE}`);
+  }
+
+  setLimit(int) {
+    return (int && +int > 0) ? +int : 10;
+  }
+
+  // Private
+  
+  _init() {
     // Wrapper for our selectarr elements
     this._wrapper           = document.createElement("div");
     this._wrapper.className = this._class;
@@ -69,28 +91,6 @@ class Selectarr {
     this._wrapper.appendChild(this._hidden);
     this._wrapper.appendChild(this._list);
   }
-
-  addActive() {
-    // Remove active before applying new one
-    this.removeActive();
-
-    const listItems = this._list.querySelectorAll(`[${Data.ITEM}]`);
-    if (!listItems.length || this._index < 0 || this._index > listItems.length) 
-      return null;
-
-    listItems[this._index].classList.add(`${this._class}-${ClassName.ITEMACTIVE}`);
-  }
-
-  removeActive() {
-    const active = this._list.querySelector(`.${this._class}-${ClassName.ITEMACTIVE}`);
-    if (active) active.classList.remove(`${this._class}-${ClassName.ITEMACTIVE}`);
-  }
-
-  setLimit(int) {
-    return (int && +int > 0) ? +int : 10;
-  }
-
-	// Private
 
   _applyValue(event) {
     let listItem = event.target.closest(`[${Data.ITEM}]`) || 
@@ -192,25 +192,8 @@ class Selectarr {
     this.addActive();
   }
 
-	// Static
-
-  static _checkSibling(target) {
-    if (!target) return null;
-
-    const wrapper	= target.parentElement;
-    const sibling = wrapper.querySelector(`[${Data.LIST}].${ClassName.LISTOPEN}`);
-
-    return sibling;
-  }
-
-  static _removeList(event = null) {
-    if (event) {
-      const target    = event.target.closest(`[${Data.INPUT}]`);
-      const isSibling = Selectarr._checkSibling(target);
-
-      if (isSibling) return null;
-    }
-
+  // Static
+  static _removeList() {
     const list = document.querySelector(`[${Data.LIST}].${ClassName.LISTOPEN}`);
 
     if (!list) return;
@@ -220,18 +203,15 @@ class Selectarr {
   }
 }
 
-document.addEventListener("click", Selectarr._removeList);
+document.addEventListener("click", event => {
+  const target  = event.target.closest(`[${Data.INPUT}]`);
+  const sibling = target 
+    ? target.parentElement.querySelector(`[${Data.LIST}].${ClassName.LISTOPEN}`)
+    : null;
+
+  if (sibling) return null;
+
+  Selectarr._removeList();
+});
 
 export default Selectarr;
-
-new Selectarr(".input", {
-  class: "selectarr",
-  limit: 7,
-  items: [
-    "hello!",
-    {
-      label: "howdy",
-      value: "hola"
-    }
-  ]
-})

@@ -79,13 +79,39 @@
       this._hidden = null;
       this._wrapper = null;
       this._length = null;
-      this.init();
+
+      this._init();
     } // Public
 
 
     _createClass(Selectarr, [{
-      key: "init",
-      value: function init() {
+      key: "addActive",
+      value: function addActive() {
+        // Remove active before applying new one
+        this.removeActive();
+
+        var listItems = this._list.querySelectorAll("[".concat(Data.ITEM, "]"));
+
+        if (!listItems.length || this._index < 0 || this._index > listItems.length) return null;
+
+        listItems[this._index].classList.add("".concat(this._class, "-").concat(ClassName.ITEMACTIVE));
+      }
+    }, {
+      key: "removeActive",
+      value: function removeActive() {
+        var active = this._list.querySelector(".".concat(this._class, "-").concat(ClassName.ITEMACTIVE));
+
+        if (active) active.classList.remove("".concat(this._class, "-").concat(ClassName.ITEMACTIVE));
+      }
+    }, {
+      key: "setLimit",
+      value: function setLimit(int) {
+        return int && +int > 0 ? +int : 10;
+      } // Private
+
+    }, {
+      key: "_init",
+      value: function _init() {
         // Wrapper for our selectarr elements
         this._wrapper = document.createElement("div");
         this._wrapper.className = this._class;
@@ -114,31 +140,6 @@
 
         this._wrapper.appendChild(this._list);
       }
-    }, {
-      key: "addActive",
-      value: function addActive() {
-        // Remove active before applying new one
-        this.removeActive();
-
-        var listItems = this._list.querySelectorAll("[".concat(Data.ITEM, "]"));
-
-        if (!listItems.length || this._index < 0 || this._index > listItems.length) return null;
-
-        listItems[this._index].classList.add("".concat(this._class, "-").concat(ClassName.ITEMACTIVE));
-      }
-    }, {
-      key: "removeActive",
-      value: function removeActive() {
-        var active = this._list.querySelector(".".concat(this._class, "-").concat(ClassName.ITEMACTIVE));
-
-        if (active) active.classList.remove("".concat(this._class, "-").concat(ClassName.ITEMACTIVE));
-      }
-    }, {
-      key: "setLimit",
-      value: function setLimit(int) {
-        return int && +int > 0 ? +int : 10;
-      } // Private
-
     }, {
       key: "_applyValue",
       value: function _applyValue(event) {
@@ -244,26 +245,8 @@
       } // Static
 
     }], [{
-      key: "_checkSibling",
-      value: function _checkSibling(target) {
-        if (!target) return null;
-        var wrapper = target.parentElement;
-        var sibling = wrapper.querySelector("[".concat(Data.LIST, "].").concat(ClassName.LISTOPEN));
-        return sibling;
-      }
-    }, {
       key: "_removeList",
       value: function _removeList() {
-        var event = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-
-        if (event) {
-          var target = event.target.closest("[".concat(Data.INPUT, "]"));
-
-          var isSibling = Selectarr._checkSibling(target);
-
-          if (isSibling) return null;
-        }
-
         var list = document.querySelector("[".concat(Data.LIST, "].").concat(ClassName.LISTOPEN));
         if (!list) return;
         list.classList.remove(ClassName.LISTOPEN);
@@ -274,14 +257,12 @@
     return Selectarr;
   }();
 
-  document.addEventListener("click", Selectarr._removeList);
-  new Selectarr(".input", {
-    class: "selectarr",
-    limit: 7,
-    items: ["hello!", {
-      label: "howdy",
-      value: "hola"
-    }]
+  document.addEventListener("click", function (event) {
+    var target = event.target.closest("[".concat(Data.INPUT, "]"));
+    var sibling = target ? target.parentElement.querySelector("[".concat(Data.LIST, "].").concat(ClassName.LISTOPEN)) : null;
+    if (sibling) return null;
+
+    Selectarr._removeList();
   });
 
   return Selectarr;

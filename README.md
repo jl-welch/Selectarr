@@ -14,11 +14,12 @@ import Selectarr from "selectarr";
 | `element`     | The element selector | `String` |
 | `options`     | All of the options   | `Object` |
 
+
 ```js
 const options = {
   class: "custom-select",
   limit: 5,
-  values: [
+  items: [
     "Single string for label and value",
     "Another one",
     {
