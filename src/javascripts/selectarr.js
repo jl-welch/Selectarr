@@ -248,39 +248,3 @@ document.addEventListener("click", event => {
 });
 
 export default Selectarr;
-
-const howdy = new Selectarr(".input", {
-  items: [
-    {
-      label: "Hello",
-      value: "howdy",
-    },
-    {
-      label: "hi",
-      value: "hiii",
-    },
-    {
-      label: "hell",
-      value: "yo",
-    },
-  ],
-  limit: 2,
-});
-
-const howdy2 = new Selectarr(".input2", {
-  items: [
-    {
-      label: "Hello",
-      value: "howdy",
-    },
-    {
-      label: "hi",
-      value: "hiii",
-    },
-    {
-      label: "hell",
-      value: "yo",
-    },
-  ],
-  limit: 2,
-});

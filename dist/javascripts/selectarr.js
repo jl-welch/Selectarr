@@ -307,32 +307,6 @@
       Selectarr._removeList();
     }
   });
-  var howdy = new Selectarr(".input", {
-    items: [{
-      label: "Hello",
-      value: "howdy"
-    }, {
-      label: "hi",
-      value: "hiii"
-    }, {
-      label: "hell",
-      value: "yo"
-    }],
-    limit: 2
-  });
-  var howdy2 = new Selectarr(".input2", {
-    items: [{
-      label: "Hello",
-      value: "howdy"
-    }, {
-      label: "hi",
-      value: "hiii"
-    }, {
-      label: "hell",
-      value: "yo"
-    }],
-    limit: 2
-  });
 
   return Selectarr;
 
