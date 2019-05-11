@@ -3,7 +3,7 @@
   display: inline-block;
 }
 
-.selectarr-list {
+.selectarr__list {
   position: absolute;
   top: 100%;
   left: 0;
@@ -18,7 +18,7 @@
   box-sizing: border-box;
 }
 
-.selectarr-item {
+.selectarr__item {
   margin: 0;
   padding: 0.6rem 1.2rem;
   border-bottom: 1px solid #e8ebec;
@@ -27,8 +27,8 @@
   transition: background-color .15s ease;
 }
 
-.selectarr-item.selectarr-active {
+.selectarr__item--active {
   background-color: #e8ebec;
 }
 
-/*# sourceMappingURL=style.css.map */
+/*# sourceMappingURL=selectarr.css.map */

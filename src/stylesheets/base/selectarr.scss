@@ -3,7 +3,7 @@
   display: inline-block;
 }
 
-.selectarr-list {
+.selectarr__list {
   position: absolute;
   top: 100%;
   left: 0;
@@ -18,7 +18,7 @@
   box-sizing: border-box;
 }
 
-.selectarr-item {
+.selectarr__item {
   margin: 0;
   padding: $selectarr-item-spacing-y $selectarr-item-spacing-x;
   border-bottom: $selectarr-border solid $selectarr-border-color;
@@ -26,7 +26,7 @@
   cursor: pointer;
   transition: background-color .15s ease;
 
-  &.selectarr-active {
+  &--active {
     background-color: $selectarr-border-color;
   }
 }
