@@ -1,4 +1,5 @@
 # Selectarr
+
 ### Turn simple text inputs into a select-type dropdown
 
 ## Javascript
@@ -7,13 +8,12 @@
 import Selectarr from "selectarr";
 ```
 
-#### Creation
+| Parameter | Description          | Type     |
+| --------- | -------------------- | -------- |
+| `element` | The element selector | `String` |
+| `options` | All of the options   | `Object` |
 
-| Parameter     | Description          | Type     |
-| ------------- | -------------------- | -------- |
-| `element`     | The element selector | `String` |
-| `options`     | All of the options   | `Object` |
-
+#### Example
 
 ```js
 const options = {
@@ -23,18 +23,18 @@ const options = {
     "Single string for label and value",
     "Another one",
     {
-      label: "Or an object for different label and values.",
-      value: "object-label-value"
+      label: "Or specify label and value.",
+      value: "object-label-value",
     },
     {
       label: "John Doe",
-      value: "john"
+      value: "john",
     },
     {
       label: "Foo Bar",
-      value: "foo"
+      value: "foo",
     },
-  ]
+  ],
 };
 
 new Selectarr(".input", options);
@@ -42,58 +42,58 @@ new Selectarr(".input", options);
 
 ##### Options
 
-| Key           | Description                                                       | Default     | Type     |
-| ------------- | ----------------------------------------------------------------- | ----------- | -------- |
-| class         | Base class name                                                   | `Selectarr` | `String` |
-| limit         | Limits list items                                                 | `10`        | `Number` |
-| items         | Array of objects with label and values or single string for both. |             | `Array`  |
+| Key   | Description                                                       | Default     | Type     |
+| ----- | ----------------------------------------------------------------- | ----------- | -------- |
+| class | Base class name                                                   | `Selectarr` | `String` |
+| limit | Limits list items                                                 | `10`        | `Number` |
+| items | Array of objects with label and values or single string for both. |             | `Array`  |
 
 ## HTML
 
 Your input element requires the attribute `data-selectarr`.
 
 ```html
-<input class="input" type="text" name="username" data-selectarr>
+<input class="input" type="text" name="username" data-selectarr />
 ```
 
-Selectarr will add some needed HTML:
+After Selectarr is run, your HTML will look like:
 
 ```html
 <div class="selectarr">
-  <input class="input" id="input" type="text" data-selectarr>
-  <input class="selectarr-input" type="hidden" name="username">
+  <input class="input" id="input" type="text" data-selectarr />
+  <input class="selectarr-input" type="hidden" name="username" />
   <ul class="selectarr-list" data-selectarr-list></ul>
 </div>
 ```
 
-The classes used on the generated HTML are defaulted to `selectarr`, unless changed in the options.
+Classes are defaulted to have the `selectarr` prefix. This can be changed in the options.
 
-| Element       | Class name     |
-| ------------- | -------------- |
-| Parent        | `<class>`      |
-| Hidden input  | `<class>-input`|
-| List          | `<class>-list` |
-| List item     | `<class>-item` |
+| Element      | Class name      |
+| ------------ | --------------- |
+| Parent       | `<class>`       |
+| Hidden input | `<class>-input` |
+| List         | `<class>-list`  |
+| List item    | `<class>-item`  |
 
-The initial text input will have its name attribute copied over to the hidden input, and so will not be submitted.
+Only the hidden input will be submitted.
 
 ## CSS
 
 Include in Sass:
 
 ```css
-@import "~selectarr/src/stylesheets/style";
+@import "~selectarr/src/stylesheets/selectarr";
 ```
 
 **note**: This stylesheet includes styles for the default class names.
 
-Sass variables *used for the generated list of values*: 
+Sass variables _used for the generated list of values_:
 
-| Element                   | Default value  | Description                                        |
-| ------------------------- | -------------- | -------------------------------------------------- |
-| $selectarr-border         | `1px`          | Border width                                       |
-| $selectarr-border-color   | `#e8ebec`      | Border colour                                      |
-| $selectarr-bg             | `#fff`         | Background colour                                  |
-| $selectarr-zindex         | `10`           | z-index                                            |
-| $selectarr-item-spacing-y | `.6rem`        | Padding **top and bottom** of each list item       |
-| $selectarr-item-spacing-x | `1.2rem`       | Padding **left and right** of each list item       |
+| Element                    | Default value | Description                                  |
+| -------------------------- | ------------- | -------------------------------------------- |
+| \$selectarr-border         | `1px`         | Border width                                 |
+| \$selectarr-border-color   | `#e8ebec`     | Border colour                                |
+| \$selectarr-bg             | `#fff`        | Background colour                            |
+| \$selectarr-zindex         | `10`          | z-index                                      |
+| \$selectarr-item-spacing-y | `.6rem`       | Padding **top and bottom** of each list item |
+| \$selectarr-item-spacing-x | `1.2rem`      | Padding **left and right** of each list item |

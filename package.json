@@ -5,13 +5,13 @@
   "main": "dist/javascripts/selectarr.min.js",
   "scripts": {
     "build": "npm run build:css & npm run build:js",
-    "build:css": "node-sass --output-style expanded --source-map true --source-map-contents true --precision 6 src/stylesheets/style.scss dist/stylesheets/selectarr.css",
-    "build:js": "rollup --config build/rollup.config.js",
+    "build:css": "node-sass --output-style expanded --source-map true --source-map-contents true --precision 6 src/stylesheets/style.scss dist/stylesheets/selectarr.css && npm run minify:css",
+    "build:js": "rollup --config build/rollup.config.js && npm run minify:js",
     "minify:css": "uglifycss dist/stylesheets/selectarr.css > dist/stylesheets/selectarr.min.css",
     "minify:js": "uglifyjs dist/javascripts/selectarr.js -o dist/javascripts/selectarr.min.js -c -m",
     "watch": "npm run watch:css & npm run watch:js",
-    "watch:css": "nodemon --watch src/stylesheets/ --ext scss --exec \"npm run build:css && npm run minify:css\"",
-    "watch:js": "nodemon --watch src/javascripts/ --ext js --exec \"npm run build:js && npm run minify:js\""
+    "watch:css": "nodemon --watch src/stylesheets/ --ext scss --exec \"npm run build:css\"",
+    "watch:js": "nodemon --watch src/javascripts/ --ext js --exec \"npm run build:js\""
   },
   "devDependencies": {
     "@babel/core": "^7.2.2",
@@ -25,7 +25,8 @@
     "prettier": "^1.17.0",
     "rollup-plugin-babel": "^4.3.0",
     "rollup-plugin-node-resolve": "^4.0.0",
-    "uglifycss": "0.0.29"
+    "uglifycss": "0.0.29",
+    "uglifyjs": "^2.4.11"
   },
   "repository": {
     "type": "git",
